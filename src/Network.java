@@ -38,6 +38,8 @@ public class Network
    public static double[][] testCaseInputs;     // Inputs for each test case.
    public static double[][] testCaseOutputs;    // Outputs for each test case.
 
+   public static double[] psiValues;            // Values for each lower psi calculated when updating the second layer weights.
+
    public static int inputNodes;                // Number of nodes in input layer.
    public static int hiddenLayerNodes;          // Number of nodes in hidden layer.
    public static int outputNodes;               // Number of nodes in output layer.
@@ -68,7 +70,7 @@ public class Network
    /*
     * How often to print statistics during training.
     */
-   public static final int PRINT_STEP_SIZE = 1000;
+   public static final int PRINT_STEP_SIZE = 100;
 
    /**
     * Main method where the network is either run or trained.
@@ -93,7 +95,7 @@ public class Network
    {
       inputNodes = 2;
       hiddenLayerNodes = 2;
-      outputNodes = 1;
+      outputNodes = 3;
 
       numCases = 4;
 
@@ -186,6 +188,8 @@ public class Network
 
       testCaseInputs = new double[numCases][inputNodes];
       testCaseOutputs = new double[numCases][outputNodes];
+
+      psiValues = new double[outputNodes];
    } // public static void allocateMemoryTrain()
 
    /**
@@ -208,32 +212,56 @@ public class Network
       secondLayerWeights[1][0] = W110;
 
       /*
-       * First test case.
+       * First test case inputs.
        */
       testCaseInputs[0][0] = 0.0;
       testCaseInputs[0][1] = 0.0;
-      testCaseOutputs[0][0] = 0.0;
 
       /*
-       * Second test case.
+       * First test case outputs.
+       */
+      testCaseOutputs[0][0] = 0.0;              // OR
+      testCaseOutputs[0][1] = 0.0;              // AND
+      testCaseOutputs[0][2] = 0.0;              // XOR
+
+      /*
+       * Second test case inputs.
        */
       testCaseInputs[1][0] = 0.0;
       testCaseInputs[1][1] = 1.0;
-      testCaseOutputs[1][0] = 1.0;
 
       /*
-       * Third test case.
+       * Second test case outputs.
+       */
+      testCaseOutputs[1][0] = 1.0;              // OR
+      testCaseOutputs[1][1] = 0.0;              // AND
+      testCaseOutputs[1][2] = 1.0;              // XOR
+
+      /*
+       * Third test case inputs.
        */
       testCaseInputs[2][0] = 1.0;
       testCaseInputs[2][1] = 0.0;
-      testCaseOutputs[2][0] = 1.0;
 
       /*
-       * Fourth test case.
+       * Third test case outputs.
+       */
+      testCaseOutputs[2][0] = 1.0;              // OR
+      testCaseOutputs[2][1] = 0.0;              // AND
+      testCaseOutputs[2][2] = 1.0;              // XOR
+
+      /*
+       * Fourth test case inputs.
        */
       testCaseInputs[3][0] = 1.0;
       testCaseInputs[3][1] = 1.0;
-      testCaseOutputs[3][0] = 1.0;
+
+      /*
+       * Fourth test case outputs.
+       */
+      testCaseOutputs[3][0] = 1.0;              // OR
+      testCaseOutputs[3][1] = 1.0;              // AND
+      testCaseOutputs[3][2] = 0.0;              // XOR
    } // public static void loadValuesRun()
 
    /**
@@ -244,32 +272,56 @@ public class Network
       System.out.println("Loading values.");
 
       /*
-       * First test case.
+       * First test case inputs.
        */
       testCaseInputs[0][0] = 0.0;
       testCaseInputs[0][1] = 0.0;
-      testCaseOutputs[0][0] = 0.0;
 
       /*
-       * Second test case.
+       * First test case outputs.
+       */
+      testCaseOutputs[0][0] = 0.0;              // OR
+      testCaseOutputs[0][1] = 0.0;              // AND
+      testCaseOutputs[0][2] = 0.0;              // XOR
+
+      /*
+       * Second test case inputs.
        */
       testCaseInputs[1][0] = 0.0;
       testCaseInputs[1][1] = 1.0;
-      testCaseOutputs[1][0] = 1.0;
 
       /*
-       * Third test case.
+       * Second test case outputs.
+       */
+      testCaseOutputs[1][0] = 1.0;              // OR
+      testCaseOutputs[1][1] = 0.0;              // AND
+      testCaseOutputs[1][2] = 1.0;              // XOR
+
+      /*
+       * Third test case inputs.
        */
       testCaseInputs[2][0] = 1.0;
       testCaseInputs[2][1] = 0.0;
-      testCaseOutputs[2][0] = 1.0;
 
       /*
-       * Fourth test case.
+       * Third test case outputs.
+       */
+      testCaseOutputs[2][0] = 1.0;              // OR
+      testCaseOutputs[2][1] = 0.0;              // AND
+      testCaseOutputs[2][2] = 1.0;              // XOR
+
+      /*
+       * Fourth test case inputs.
        */
       testCaseInputs[3][0] = 1.0;
       testCaseInputs[3][1] = 1.0;
-      testCaseOutputs[3][0] = 1.0;
+
+      /*
+       * Fourth test case outputs.
+       */
+      testCaseOutputs[3][0] = 1.0;              // OR
+      testCaseOutputs[3][1] = 1.0;              // AND
+      testCaseOutputs[3][2] = 0.0;              // XOR
    } // public static void loadValuesTrain()
 
    /**
@@ -296,18 +348,21 @@ public class Network
          hiddenActivations[j] = f(hiddenActivation);
       } // for (int j = 0; j < hiddenLayerNodes; j++)
 
-      /*
-       * Calculate new activation for the output layer node.
-       */
-      double outputActivation = 0.0;
-      for (int j = 0; j < hiddenLayerNodes; j++)
+      for (int i = 0; i < outputNodes; i++)
       {
-         double hiddenActivation = hiddenActivations[j];
-         double weight = secondLayerWeights[j][0];
+         /*
+          * Calculate new activation for the output layer node.
+          */
+         double outputActivation = 0.0;
+         for (int j = 0; j < hiddenLayerNodes; j++)
+         {
+            double hiddenActivation = hiddenActivations[j];
+            double weight = secondLayerWeights[j][i];
 
-         outputActivation += hiddenActivation * weight;
+            outputActivation += hiddenActivation * weight;
+         }
+         outputActivations[i] = f(outputActivation);
       }
-      outputActivations[0] = f(outputActivation);
    } // public static void evaluateNetwork()
 
    /**
@@ -316,8 +371,14 @@ public class Network
     */
    public static double calculateError(int testCase)
    {
-      return 0.5 * (testCaseOutputs[testCase][0] - outputActivations[0])
-              * (testCaseOutputs[testCase][0] - outputActivations[0]);
+      double error = 0.0;
+
+      for (int i = 0; i < outputNodes; i++)
+      {
+         double omegai = testCaseOutputs[testCase][i] - outputActivations[i];
+         error += omegai * omegai;
+      }
+      return error * 0.5;
    } // public static double calculateError(int testCase)
 
 
@@ -356,8 +417,8 @@ public class Network
          loadTestCase(testCase);
          evaluateNetwork();
          System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
-               + " |  OUTPUT (F): " + outputActivations[0]
-                 + ", Expected (T): " + testCaseOutputs[testCase][0]);
+               + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
+                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
       } // for (int testCase = 0; testCase < numCases; testCase++)
       System.out.println();
 
@@ -463,30 +524,37 @@ public class Network
     */
    public static void updateWeights(int testCase)
    {
-      /*
-       * Calculate theta0 by iterating through weights connecting hidden layer and output layer.
-       */
-      double theta0 = 0.0;
-      for (int j = 0; j < hiddenLayerNodes; j++)
-         theta0 += hiddenActivations[j] * secondLayerWeights[j][0];
-
-      double F0 = f(theta0);                            // Network output for current test case.
-      double T0 = testCaseOutputs[testCase][0];         // Expected output of test case.
-
-      double omega0 = (T0 - F0);                        // Diff between network and expected outputs.
-      double psi0 = omega0 * fPrime(theta0);
 
       /*
        * Calculate the new values for the weights connecting the hidden and output layers.
        */
-      for (int j = 0; j < hiddenLayerNodes; j++)
+      for(int i = 0; i < outputNodes; i++)
       {
-         double partial = -hiddenActivations[j] * psi0;
+         /*
+          * Calculate thetai for the ith output layer node.
+          */
+         double thetai = 0.0;
+         for(int j = 0; j < hiddenLayerNodes; j++)
+            thetai += hiddenActivations[j] * secondLayerWeights[j][i];
 
-         double weightChange = -learningRate * partial;
 
-         secondLayerWeightChanges[j][0] = weightChange; // Store changes for each weight.
-      }
+         for(int j = 0; j < hiddenLayerNodes; j++)
+         {
+            double Fi = f(thetai);                            // Network output for current test case.
+            double Ti = testCaseOutputs[testCase][i];         // Expected output of test case.
+
+            double omegai = Ti - Fi;
+            double psii = omegai * fPrime(thetai);
+            psiValues[i] = psii;                              // Store for future use when updating first layer weights.
+
+            double partial = -hiddenActivations[j] * psii;
+
+            double weightChange = -learningRate * partial;
+
+            secondLayerWeightChanges[j][0] = weightChange; // Store changes for each weight.
+         } // for(int j = 0; j < hiddenLayerNodes; j++)
+      } // for(int i = 0; i < outputNodes; i++)
+
 
       /*
        * Calculate the new values for the weights connecting the input and hidden layers.
@@ -500,13 +568,21 @@ public class Network
          for (int k = 0; k < inputNodes; k++)
             thetaj += inputActivations[k] * firstLayerWeights[k][j];
 
+
+         /*
+          * Calculate upper omega j for the jth hidden layer node.
+          */
+         double upperOmegaj = 0.0;
+         for(int i = 0; i < outputNodes; i++)
+         {
+            upperOmegaj += psiValues[i] * secondLayerWeights[j][i];
+         }
+
          /*
           * Storing change for weight connecting input node k and hidden node j.
           */
          for (int k = 0; k < inputNodes; k++)
          {
-            double upperOmegaj = psi0 * secondLayerWeights[j][0];
-
             double upperPsij = upperOmegaj * fPrime(thetaj);
 
             double partial = -inputActivations[k] * upperPsij;
