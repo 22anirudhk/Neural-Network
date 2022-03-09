@@ -1,15 +1,15 @@
 import java.util.Arrays;
 
 /**
- * This class represents an A by B by 1 perceptron. There are A neurons in the input layer,
- * B neurons in the hidden layer, and 1 neuron in the output layer.
+ * This class represents an A by B by C perceptron. There are A neurons in the input layer,
+ * B neurons in the hidden layer, and C neurons in the output layer.
  *
  * The network takes in sets of input test cases and can train itself to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
  *
  * @author Anirudh Kotamraju
- * @version February 28, 2022.
+ * @version March 9, 2022
  */
 public class Network
 {
@@ -54,7 +54,7 @@ public class Network
    public static double errorThreshold;         // Value of error for which training ends.
 
    /*
-    * These are weights previously found to minimize error for the XOR problem for a 2 x 2 x 1 network.
+    * These are weights that can be used for a 2 x 2 x 2 network.
     *
     * These are used in the "run" process for the network and will be removed once weights for the process
     * are read from a file in a future iteration of this codebase.
@@ -65,12 +65,14 @@ public class Network
    public static final double W011 = 7.999;
 
    public static final double W100 = -37.284;
+   public static final double W101 = -37.284;
    public static final double W110 = 29.768;
+   public static final double W111 = 29.768;
 
    /*
     * How often to print statistics during training.
     */
-   public static final int PRINT_STEP_SIZE = 100;
+   public static int printStepSize;
 
    /**
     * Main method where the network is either run or trained.
@@ -94,7 +96,7 @@ public class Network
    public static void config()
    {
       inputNodes = 2;
-      hiddenLayerNodes = 2;
+      hiddenLayerNodes = 5;
       outputNodes = 3;
 
       numCases = 4;
@@ -105,6 +107,8 @@ public class Network
       learningRate = 0.3;
       maxIters = 100000;
       errorThreshold = 0.005;
+
+      printStepSize = 5000;
    } // public static void config()
 
    /**
@@ -200,7 +204,7 @@ public class Network
       System.out.println("Loading values.");
 
       /*
-       * Preload 2 by 2 by 1 network with weights previously found to minimize error for the XOR problem.
+       * Preload 2 by 2 by 2 network with weights.
        * In the future, weights will be read from a file.
        */
       firstLayerWeights[0][0] = W000;
@@ -209,7 +213,9 @@ public class Network
       firstLayerWeights[1][1] = W011;
 
       secondLayerWeights[0][0] = W100;
+      secondLayerWeights[0][1] = W101;
       secondLayerWeights[1][0] = W110;
+      secondLayerWeights[1][1] = W111;
 
       /*
        * First test case inputs.
@@ -222,7 +228,6 @@ public class Network
        */
       testCaseOutputs[0][0] = 0.0;              // OR
       testCaseOutputs[0][1] = 0.0;              // AND
-      testCaseOutputs[0][2] = 0.0;              // XOR
 
       /*
        * Second test case inputs.
@@ -235,7 +240,6 @@ public class Network
        */
       testCaseOutputs[1][0] = 1.0;              // OR
       testCaseOutputs[1][1] = 0.0;              // AND
-      testCaseOutputs[1][2] = 1.0;              // XOR
 
       /*
        * Third test case inputs.
@@ -248,7 +252,6 @@ public class Network
        */
       testCaseOutputs[2][0] = 1.0;              // OR
       testCaseOutputs[2][1] = 0.0;              // AND
-      testCaseOutputs[2][2] = 1.0;              // XOR
 
       /*
        * Fourth test case inputs.
@@ -261,7 +264,6 @@ public class Network
        */
       testCaseOutputs[3][0] = 1.0;              // OR
       testCaseOutputs[3][1] = 1.0;              // AND
-      testCaseOutputs[3][2] = 0.0;              // XOR
    } // public static void loadValuesRun()
 
    /**
@@ -325,18 +327,15 @@ public class Network
    } // public static void loadValuesTrain()
 
    /**
-    * Calculate output of network with given weights.
+    * Calculate outputs of network with given weights.
     */
    public static void evaluateNetwork()
    {
       /*
-       * Update hidden layer activations by looping through each weight connecting the input layer the and hidden layer.
+       * Calculate hidden layer activations by looping through each weight connecting the input layer the and hidden layer.
        */
       for (int j = 0; j < hiddenLayerNodes; j++)
       {
-         /*
-          * Calculate the new activation for the jth hidden layer node.
-          */
          double hiddenActivation = 0.0;
          for (int k = 0; k < inputNodes; k++)
          {
@@ -348,21 +347,23 @@ public class Network
          hiddenActivations[j] = f(hiddenActivation);
       } // for (int j = 0; j < hiddenLayerNodes; j++)
 
+      /*
+       * Calculate output layer activations by looping through each weight connecting the hidden layer the and output layer.
+       */
       for (int i = 0; i < outputNodes; i++)
       {
-         /*
-          * Calculate new activation for the output layer node.
-          */
          double outputActivation = 0.0;
+
          for (int j = 0; j < hiddenLayerNodes; j++)
          {
             double hiddenActivation = hiddenActivations[j];
             double weight = secondLayerWeights[j][i];
 
             outputActivation += hiddenActivation * weight;
-         }
+         } // for (int j = 0; j < hiddenLayerNodes; j++)
+
          outputActivations[i] = f(outputActivation);
-      }
+      } // for (int i = 0; i < outputNodes; i++)
    } // public static void evaluateNetwork()
 
    /**
@@ -378,6 +379,7 @@ public class Network
          double omegai = testCaseOutputs[testCase][i] - outputActivations[i];
          error += omegai * omegai;
       }
+
       return error * 0.5;
    } // public static double calculateError(int testCase)
 
@@ -420,6 +422,7 @@ public class Network
                + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
                  + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
       } // for (int testCase = 0; testCase < numCases; testCase++)
+
       System.out.println();
 
       System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
@@ -447,10 +450,11 @@ public class Network
             firstLayerWeights[k][j] = randomNumber(lowerWeightBound, upperWeightBound);
 
       /*
-       * Randomize weights connecting hidden layer and output layers
+       * Randomize weights connecting hidden layer and output layer.
        */
       for (int j = 0; j < hiddenLayerNodes; j++)
-         secondLayerWeights[j][0] = randomNumber(lowerWeightBound, upperWeightBound);
+         for (int i = 0; i < outputNodes; i++)
+            secondLayerWeights[j][i] = randomNumber(lowerWeightBound, upperWeightBound);
    } // public static void randomizeWeights()
 
    /**
@@ -508,7 +512,7 @@ public class Network
 
          iter++;
 
-         if (iter % PRINT_STEP_SIZE == 0)
+         if (iter % printStepSize == 0)
          {
             System.out.println("Iteration #" + iter + " complete. Error: " + error);
          }
@@ -524,9 +528,8 @@ public class Network
     */
    public static void updateWeights(int testCase)
    {
-
       /*
-       * Calculate the new values for the weights connecting the hidden and output layers.
+       * Calculate the new values for the weights connecting the hidden layer and output layer.
        */
       for(int i = 0; i < outputNodes; i++)
       {
@@ -537,7 +540,9 @@ public class Network
          for(int j = 0; j < hiddenLayerNodes; j++)
             thetai += hiddenActivations[j] * secondLayerWeights[j][i];
 
-
+         /*
+          * Storing change for weight connecting hidden node j and output node i.
+          */
          for(int j = 0; j < hiddenLayerNodes; j++)
          {
             double Fi = f(thetai);                            // Network output for current test case.
@@ -551,13 +556,12 @@ public class Network
 
             double weightChange = -learningRate * partial;
 
-            secondLayerWeightChanges[j][0] = weightChange; // Store changes for each weight.
+            secondLayerWeightChanges[j][i] = weightChange;    // Store changes for each weight.
          } // for(int j = 0; j < hiddenLayerNodes; j++)
       } // for(int i = 0; i < outputNodes; i++)
 
-
       /*
-       * Calculate the new values for the weights connecting the input and hidden layers.
+       * Calculate the new values for the weights connecting the input layer and hidden layer.
        */
       for (int j = 0; j < hiddenLayerNodes; j++)
       {
@@ -568,15 +572,12 @@ public class Network
          for (int k = 0; k < inputNodes; k++)
             thetaj += inputActivations[k] * firstLayerWeights[k][j];
 
-
          /*
-          * Calculate upper omega j for the jth hidden layer node.
+          * Calculate upper omegaj for the jth hidden layer node.
           */
          double upperOmegaj = 0.0;
          for(int i = 0; i < outputNodes; i++)
-         {
             upperOmegaj += psiValues[i] * secondLayerWeights[j][i];
-         }
 
          /*
           * Storing change for weight connecting input node k and hidden node j.
@@ -594,13 +595,14 @@ public class Network
 
 
       /*
-       * Update weights connecting hidden layer and output layers.
+       * Update weights connecting hidden layer and output layer.
        */
       for (int j = 0; j < hiddenLayerNodes; j++)
-         secondLayerWeights[j][0] += secondLayerWeightChanges[j][0];
+         for(int i = 0; i < outputNodes; i++)
+            secondLayerWeights[j][i] += secondLayerWeightChanges[j][i];
 
       /*
-       * Update weights connecting input layer and hidden layers.
+       * Update weights connecting input layer and hidden layer.
        */
       for (int k = 0; k < inputNodes; k++)
          for (int j = 0; j < hiddenLayerNodes; j++)
