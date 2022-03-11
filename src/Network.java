@@ -9,7 +9,7 @@ import java.util.Arrays;
  *
  *
  * @author Anirudh Kotamraju
- * @version March 10, 2022
+ * @version March 11, 2022
  */
 public class Network
 {
@@ -96,7 +96,7 @@ public class Network
    public static void config()
    {
       inputNodes = 2;
-      hiddenLayerNodes = 100;
+      hiddenLayerNodes = 5;
       outputNodes = 3;
 
       numCases = 4;
@@ -178,8 +178,8 @@ public class Network
       firstLayerWeights = new double[inputNodes][hiddenLayerNodes];
 
       /*
-       * Can be accessed in the form [j][i], where j is the index of the node in the input layer
-       * and j is the index of the node in the hidden layer.
+       * Can be accessed in the form [j][i], where j is the index of the node in the hidden layer
+       * and i is the index of the node in the output layer.
        */
       secondLayerWeights = new double[hiddenLayerNodes][outputNodes];
 
@@ -593,7 +593,6 @@ public class Network
             firstLayerWeightChanges[k][j] = weightChange; // Store changes for each weight.
          } // for (int k = 0; k < inputNodes; k++)
       } // for (int j = 0; j < hiddenLayerNodes; j++)
-
 
       /*
        * Update weights connecting hidden layer and output layer.
