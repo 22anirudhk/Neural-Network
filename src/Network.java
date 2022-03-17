@@ -38,7 +38,10 @@ public class Network
    public static double[][] testCaseInputs;     // Inputs for each test case.
    public static double[][] testCaseOutputs;    // Outputs for each test case.
 
-   public static double[] psiValues;            // Values for each lower psi calculated when updating the second layer weights.
+   public static double[] psiValues;            // Values for each lower psi calculated when evaluating the network for training.
+   public static double[] omegaValues;          // Values for each omega calculated when evaluating the network for training.
+   public static double[] thetajValues;         // Values for each theta j calculated when evaluating the network for training.
+   public static double[] thetaiValues;         // Values for each theta i calculated when evaluating the network for training.
 
    public static int inputNodes;                // Number of nodes in input layer.
    public static int hiddenLayerNodes;          // Number of nodes in hidden layer.
@@ -52,6 +55,8 @@ public class Network
 
    public static int maxIters;                  // Maximum number of training iterations.
    public static double errorThreshold;         // Value of error for which training ends.
+
+   public static int printStepSize;             // How often to print statistics during training.
 
    /*
     * These are weights that can be used for a 2 x 2 x 2 network.
@@ -68,11 +73,6 @@ public class Network
    public static final double W101 = -37.284;
    public static final double W110 = 29.768;
    public static final double W111 = 29.768;
-
-   /*
-    * How often to print statistics during training.
-    */
-   public static int printStepSize;
 
    /*
     * Main method where the network is either run or trained.
@@ -130,12 +130,52 @@ public class Network
       for (int testcase = 0; testcase < numCases; testcase++)
       {
          loadTestCase(testcase);
-         evaluateNetwork();
+         evaluateNetworkRun();
          error += calculateError(testcase);
       } // for (int testcase = 0; testcase < numCases; testcase++)
 
       System.out.println("ERROR: " + error);
    } // public static void runNetwork()
+
+   /*
+    * Calculate outputs of network with given weights for the running process.
+    */
+   public static void evaluateNetworkRun()
+   {
+      /*
+       * Calculate hidden layer activations by looping through each weight connecting the input layer the and hidden layer.
+       */
+      for (int j = 0; j < hiddenLayerNodes; j++)
+      {
+         double hiddenActivation = 0.0;
+         for (int k = 0; k < inputNodes; k++)
+         {
+            double inputActivation = inputActivations[k];
+            double weight = firstLayerWeights[k][j];
+
+            hiddenActivation += inputActivation * weight;
+         }
+         hiddenActivations[j] = f(hiddenActivation);
+      } // for (int j = 0; j < hiddenLayerNodes; j++)
+
+      /*
+       * Calculate output layer activations by looping through each weight connecting the hidden layer the and output layer.
+       */
+      for (int i = 0; i < outputNodes; i++)
+      {
+         double outputActivation = 0.0;
+
+         for (int j = 0; j < hiddenLayerNodes; j++)
+         {
+            double hiddenActivation = hiddenActivations[j];
+            double weight = secondLayerWeights[j][i];
+
+            outputActivation += hiddenActivation * weight;
+         } // for (int j = 0; j < hiddenLayerNodes; j++)
+
+         outputActivations[i] = f(outputActivation);
+      } // for (int i = 0; i < outputNodes; i++)
+   } // public static void evaluateNetworkRun()
 
    /*
     * Allocate memory for weights, activations, and test cases arrays for the running process.
@@ -194,6 +234,9 @@ public class Network
       testCaseOutputs = new double[numCases][outputNodes];
 
       psiValues = new double[outputNodes];
+      omegaValues = new double[outputNodes];
+      thetaiValues = new double[outputNodes];
+      thetajValues = new double[hiddenLayerNodes];
    } // public static void allocateMemoryTrain()
 
    /*
@@ -327,24 +370,30 @@ public class Network
    } // public static void loadValuesTrain()
 
    /*
-    * Calculate outputs of network with given weights.
+    * Calculate outputs of network with given weights for the training process. Unlike evaluateNetworkRun, this method stores
+    * certain values when calculating activations in the network.
+    *
+    * @param testCase The test case for which the network is being evaluated on.
     */
-   public static void evaluateNetwork()
+   public static void evaluateNetworkTrain(int testCase)
    {
       /*
        * Calculate hidden layer activations by looping through each weight connecting the input layer the and hidden layer.
        */
       for (int j = 0; j < hiddenLayerNodes; j++)
       {
-         double hiddenActivation = 0.0;
+         double thetaj = 0.0;
+
          for (int k = 0; k < inputNodes; k++)
          {
             double inputActivation = inputActivations[k];
             double weight = firstLayerWeights[k][j];
 
-            hiddenActivation += inputActivation * weight;
+            thetaj += inputActivation * weight;
          }
-         hiddenActivations[j] = f(hiddenActivation);
+
+         thetajValues[j] = thetaj;
+         hiddenActivations[j] = f(thetaj);
       } // for (int j = 0; j < hiddenLayerNodes; j++)
 
       /*
@@ -352,19 +401,28 @@ public class Network
        */
       for (int i = 0; i < outputNodes; i++)
       {
-         double outputActivation = 0.0;
+         double thetai = 0.0;
 
          for (int j = 0; j < hiddenLayerNodes; j++)
          {
             double hiddenActivation = hiddenActivations[j];
             double weight = secondLayerWeights[j][i];
 
-            outputActivation += hiddenActivation * weight;
+            thetai += hiddenActivation * weight;
          } // for (int j = 0; j < hiddenLayerNodes; j++)
 
-         outputActivations[i] = f(outputActivation);
+         thetaiValues[i] = thetai;
+
+         double Fi = f(thetai);
+         outputActivations[i] = Fi;
+
+         double omegai = testCaseOutputs[testCase][i] - Fi;
+         omegaValues[i] = omegai;
+
+         double psii = omegai * fPrime(thetai);
+         psiValues[i] = psii;
       } // for (int i = 0; i < outputNodes; i++)
-   } // public static void evaluateNetwork()
+   } // public static void evaluateNetworkTrain()
 
    /*
     * Calculate the error in the network's output.
@@ -382,7 +440,6 @@ public class Network
 
       return error * 0.5;
    } // public static double calculateError(int testCase)
-
 
    /*
     * Prints a report summarizing the training process.
@@ -417,7 +474,7 @@ public class Network
       for (int testCase = 0; testCase < numCases; testCase++)
       {
          loadTestCase(testCase);
-         evaluateNetwork();
+         evaluateNetworkRun();
          System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
                + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
                  + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
@@ -503,9 +560,9 @@ public class Network
          for (int testCase = 0; testCase < numCases; testCase++)
          {
             loadTestCase(testCase);
-            evaluateNetwork();
-            updateWeights(testCase);
-            evaluateNetwork();
+            evaluateNetworkTrain(testCase);
+            updateWeights();
+            evaluateNetworkTrain(testCase);
 
             error += calculateError(testCase);
          }
@@ -525,9 +582,8 @@ public class Network
    /*
     * Updates the weights of the network to minimize the error of the network's output layer for
     * a given test case.
-    * @param testCase Test case for which the weights of the network should be updated.
     */
-   public static void updateWeights(int testCase)
+   public static void updateWeights()
    {
       /*
        * Calculate the new values for the weights connecting the hidden layer and output layer.
@@ -535,26 +591,13 @@ public class Network
       for (int i = 0; i < outputNodes; i++)
       {
          /*
-          * Calculate thetai for the ith output layer node.
-          */
-         double thetai = 0.0;
-         for (int j = 0; j < hiddenLayerNodes; j++)
-            thetai += hiddenActivations[j] * secondLayerWeights[j][i];
-
-         /*
           * Storing change for weight connecting hidden node j and output node i.
           */
          for (int j = 0; j < hiddenLayerNodes; j++)
          {
-            double Fi = f(thetai);                            // Network output for current test case.
-            double Ti = testCaseOutputs[testCase][i];         // Expected output of test case.
-
-            double omegai = Ti - Fi;
-            double psii = omegai * fPrime(thetai);
-            psiValues[i] = psii;                              // Store for future use when updating first layer weights.
+            double psii = psiValues[i];                       // Store for future use when updating first layer weights.
 
             double partial = -hiddenActivations[j] * psii;
-
             double weightChange = -learningRate * partial;
 
             secondLayerWeightChanges[j][i] = weightChange;    // Store changes for each weight.
@@ -569,9 +612,7 @@ public class Network
          /*
           * Calculate thetaj for the jth hidden layer node.
           */
-         double thetaj = 0.0;
-         for (int k = 0; k < inputNodes; k++)
-            thetaj += inputActivations[k] * firstLayerWeights[k][j];
+         double thetaj = thetajValues[j];
 
          /*
           * Calculate upper omegaj for the jth hidden layer node.
