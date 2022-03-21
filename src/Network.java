@@ -38,9 +38,8 @@ public class Network
    public static double[][] testCaseInputs;     // Inputs for each test case.
    public static double[][] testCaseOutputs;    // Outputs for each test case.
 
-   public static double[] psiValues;            // Values for each lower psi calculated when evaluating the network for training.
+   public static double[] psiiValues;           // Values for each psii calculated when evaluating the network for training.
    public static double[] omegajValues;         // Values for each omegaj calculated when evaluating the network for training.
-
    public static double[] thetajValues;         // Values for each theta j calculated when evaluating the network for training.
    public static double[] thetaiValues;         // Values for each theta i calculated when evaluating the network for training.
 
@@ -233,7 +232,7 @@ public class Network
       testCaseInputs = new double[numCases][inputNodes];
       testCaseOutputs = new double[numCases][outputNodes];
 
-      psiValues = new double[outputNodes];
+      psiiValues = new double[outputNodes];
       omegajValues = new double[hiddenLayerNodes];
       thetaiValues = new double[outputNodes];
       thetajValues = new double[hiddenLayerNodes];
@@ -573,7 +572,7 @@ public class Network
 
          double omegai = testCaseOutputs[testCase][i] - Fi;
          double psii = omegai * fPrime(thetai);
-         psiValues[i] = psii;
+         psiiValues[i] = psii;
       } // for (int i = 0; i < outputNodes; i++)
    } // public static void evaluateNetworkTrain()
 
@@ -592,7 +591,7 @@ public class Network
 
          for (int i = 0; i < outputNodes; i++)
          {
-            double psii = psiValues[i];
+            double psii = psiiValues[i];
             omegaj += psii * secondLayerWeights[j][i];
 
             double weightChangeji = learningRate * hiddenActivations[j] * psii;
