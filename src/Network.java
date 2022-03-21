@@ -48,7 +48,6 @@ public class Network
    public static int hiddenLayerNodes;          // Number of nodes in hidden layer.
    public static int outputNodes;               // Number of nodes in output layer.
 
-
    public static double lowerWeightBound;       // Lower bound for possible weight value.
    public static double upperWeightBound;       // Upper bound for possible weight value.
 
