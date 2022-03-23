@@ -1,15 +1,16 @@
+import java.io.*;
 import java.util.Arrays;
+import java.util.StringTokenizer;
 
 /*
  * This class represents an A by B by C perceptron. There are A neurons in the input layer,
  * B neurons in the hidden layer, and C neurons in the output layer.
  *
- * The network takes in sets of input test cases and can train itself to predict the outputs of
+ * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
- *
  * @author Anirudh Kotamraju
- * @version March 21, 2022
+ * @version March 23, 2022
  */
 public class Network
 {
@@ -56,22 +57,6 @@ public class Network
    public static double errorThreshold;         // Value of error for which training ends.
 
    public static int printStepSize;             // How often to print statistics during training.
-
-   /*
-    * These are weights that can be used for a 2 x 2 x 2 network.
-    *
-    * These are used in the "run" process for the network and will be removed once weights for the process
-    * are read from a file in a future iteration of this codebase.
-    */
-   public static final double W000 = 0.947;
-   public static final double W001 = 8.008;
-   public static final double W010 = 0.947;
-   public static final double W011 = 7.999;
-
-   public static final double W100 = -37.284;
-   public static final double W101 = -37.284;
-   public static final double W110 = 29.768;
-   public static final double W111 = 29.768;
 
    /*
     * Main method where the network is either run or trained.
@@ -246,18 +231,9 @@ public class Network
       System.out.println("Loading values.");
 
       /*
-       * Preload 2 by 2 by 2 network with weights.
-       * In the future, weights will be read from a file.
+       * Load in weights from a file.
        */
-      firstLayerWeights[0][0] = W000;
-      firstLayerWeights[0][1] = W001;
-      firstLayerWeights[1][0] = W010;
-      firstLayerWeights[1][1] = W011;
-
-      secondLayerWeights[0][0] = W100;
-      secondLayerWeights[0][1] = W101;
-      secondLayerWeights[1][0] = W110;
-      secondLayerWeights[1][1] = W111;
+      loadWeights("files/weights.txt");
 
       /*
        * First test case inputs.
@@ -270,6 +246,7 @@ public class Network
        */
       testCaseOutputs[0][0] = 0.0;              // OR
       testCaseOutputs[0][1] = 0.0;              // AND
+      testCaseOutputs[0][2] = 0.0;              // XOR
 
       /*
        * Second test case inputs.
@@ -282,6 +259,7 @@ public class Network
        */
       testCaseOutputs[1][0] = 1.0;              // OR
       testCaseOutputs[1][1] = 0.0;              // AND
+      testCaseOutputs[1][2] = 1.0;              // XOR
 
       /*
        * Third test case inputs.
@@ -294,6 +272,7 @@ public class Network
        */
       testCaseOutputs[2][0] = 1.0;              // OR
       testCaseOutputs[2][1] = 0.0;              // AND
+      testCaseOutputs[2][2] = 1.0;              // XOR
 
       /*
        * Fourth test case inputs.
@@ -306,6 +285,7 @@ public class Network
        */
       testCaseOutputs[3][0] = 1.0;              // OR
       testCaseOutputs[3][1] = 1.0;              // AND
+      testCaseOutputs[3][2] = 0.0;              // XOR
    } // public static void loadValuesRun()
 
    /*
@@ -435,6 +415,129 @@ public class Network
       System.out.println("================== TRAINING REPORT ENDING ==================");
    } // public static void printReport(int numIters, double finalError)
 
+   /*
+    * Loads weights from a file into the network.
+    * @param filename The name of the file to read.
+    */
+   public static void loadWeights(String filename)
+   {
+      /*
+       * Will attempt to instantiate a BufferedReader then read weights from the file into the network.
+       *
+       * If an IO Exception is caught, the exception will be printed.
+       */
+      try
+      {
+         BufferedReader br = new BufferedReader(new FileReader(filename));
+         br.readLine(); // Skip over header
+
+         /*
+          * Verify that the parameters of the network are correct.
+          */
+         StringTokenizer st = new StringTokenizer(br.readLine());
+         int inputNum = Integer.parseInt(st.nextToken());
+         int hiddenNum = Integer.parseInt(st.nextToken());
+         int outputNum = Integer.parseInt(st.nextToken());
+
+         /*
+          * Printing an error message so the user can make
+          */
+         if (inputNum != inputNodes || hiddenNum != hiddenLayerNodes || outputNum != outputNodes)
+            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
+                    "does not match the config() parameters.------------\n");
+
+         /*
+          * Skip over next four lines.
+          */
+         for (int line = 0; line < 4; line++)
+            br.readLine();
+
+         /*
+          * Read in firstLayerWeights.
+          */
+         for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
+         {
+            st = new StringTokenizer(br.readLine());
+
+            int k = Integer.parseInt(st.nextToken());
+            int j = Integer.parseInt(st.nextToken());
+            double weight = Double.parseDouble(st.nextToken());
+
+            firstLayerWeights[k][j] = weight;
+         } // for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
+
+         /*
+          * Skip over next four lines.
+          */
+         for (int line = 0; line < 4; line++)
+            br.readLine();
+
+         /*
+          * Read in secondLayerWeights.
+          */
+         for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
+         {
+            st = new StringTokenizer(br.readLine());
+
+            int j = Integer.parseInt(st.nextToken());
+            int i = Integer.parseInt(st.nextToken());
+            double weight = Double.parseDouble(st.nextToken());
+
+            secondLayerWeights[j][i] = weight;
+         } // for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
+      } // try
+      catch (IOException e)
+      {
+         System.out.println(e);
+      }
+   } // public static void loadWeights(String filename)
+
+   /*
+    * Saves the weights of the network to a file.
+    * @param filename The name of the file to save to.
+    */
+   public static void saveWeights(String filename)
+   {
+      /*
+       * Will attempt to instantiate a printwriter then print out the weights to a file.
+       *
+       * If an IO Exception is caught, the exception will be printed.
+       */
+      try
+      {
+         PrintWriter pw = new PrintWriter(new FileWriter(filename));
+
+         /*
+          * Print out parameters of the network.
+          */
+         pw.println("first_layer_nodes (second_layer_nodes third_layer_nodes ...)");
+         pw.println(inputNodes + " " + hiddenLayerNodes + " " + outputNodes);
+         pw.println();
+
+         pw.println("first_layer_weights:");
+         pw.println();
+         pw.println("starting_node ending_node weight_value");
+
+         for (int r = 0; r < firstLayerWeights.length; r++)
+            for (int c = 0; c < firstLayerWeights[0].length; c++)
+               pw.println(r + " " + c + " " + firstLayerWeights[r][c]);
+         pw.println();
+
+         pw.println("second_layer_weights:");
+         pw.println();
+         pw.println("starting_node ending_node weight_value");
+
+         for (int r = 0; r < secondLayerWeights.length; r++)
+            for (int c = 0; c < secondLayerWeights[0].length; c++)
+               pw.println(r + " " + c + " " + secondLayerWeights[r][c]);
+
+         pw.close();
+      } // try
+      catch (IOException e)
+      {
+         System.out.println(e);
+      }
+   } // public static void saveWeights(String filename)
 
    /*
     * Randomizes the weights of the network.
@@ -521,6 +624,8 @@ public class Network
       } // while (error > errorThreshold && iter < maxIters)
 
       printReport(iter, error);
+
+      saveWeights("files/weights.txt");
    } // public static void trainNetwork()
 
    /*
@@ -609,7 +714,6 @@ public class Network
       {
          for (int j = 0; j < hiddenLayerNodes; j++)
          {
-
             double thetaj = thetajValues[j];
             double upperPsij = omegajValues[j] * fPrime(thetaj);
 
