@@ -1,6 +1,6 @@
 import java.io.*;
 import java.util.Arrays;
-import java.util.StringTokenizer;
+import java.util.Scanner;
 
 /*
  * This class represents an A by B by C perceptron. There are A neurons in the input layer,
@@ -9,8 +9,17 @@ import java.util.StringTokenizer;
  * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
+ * TODO:
+ *   - switch to config file
+ *   - in config file, specify whether you want to train with preloaded or random weights
+ *   - in config file specify input weights file, output weights file
+ *   - add time to complete train/run
+ *   - checking documentation for everything
+ *   - ask if it's okay if we instantiate BR/PW in load/saveWeights methods
+ *   - ask if it's okay if we just put filename in allocate there
+ *
  * @author Anirudh Kotamraju
- * @version March 23, 2022
+ * @version March 28, 2022
  */
 public class Network
 {
@@ -233,7 +242,7 @@ public class Network
       /*
        * Load in weights from a file.
        */
-      loadWeights("files/weights.txt");
+      loadWeights();
 
       /*
        * First test case inputs.
@@ -419,25 +428,27 @@ public class Network
     * Loads weights from a file into the network.
     * @param filename The name of the file to read.
     */
-   public static void loadWeights(String filename)
+   public static void loadWeights()
    {
       /*
-       * Will attempt to instantiate a BufferedReader then read weights from the file into the network.
+       * Will attempt to read weights from the file into the network.
        *
        * If an IO Exception is caught, the exception will be printed.
        */
       try
       {
-         BufferedReader br = new BufferedReader(new FileReader(filename));
+         BufferedReader br = new BufferedReader(new FileReader("files/weights.txt"));
+
          br.readLine(); // Skip over header
 
          /*
           * Verify that the parameters of the network are correct.
           */
-         StringTokenizer st = new StringTokenizer(br.readLine());
-         int inputNum = Integer.parseInt(st.nextToken());
-         int hiddenNum = Integer.parseInt(st.nextToken());
-         int outputNum = Integer.parseInt(st.nextToken());
+         String str = br.readLine();
+         String[] params = str.split(" ");
+         int inputNum = Integer.parseInt(params[0]);
+         int hiddenNum = Integer.parseInt(params[1]);
+         int outputNum = Integer.parseInt(params[2]);
 
          /*
           * Printing an error message so the user can make
@@ -457,11 +468,10 @@ public class Network
           */
          for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
          {
-            st = new StringTokenizer(br.readLine());
-
-            int k = Integer.parseInt(st.nextToken());
-            int j = Integer.parseInt(st.nextToken());
-            double weight = Double.parseDouble(st.nextToken());
+            String[] vals = br.readLine().split(" ");
+            int k = Integer.parseInt(vals[0]);
+            int j = Integer.parseInt(vals[1]);
+            double weight = Double.parseDouble(vals[2]);
 
             firstLayerWeights[k][j] = weight;
          } // for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
@@ -477,35 +487,34 @@ public class Network
           */
          for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
          {
-            st = new StringTokenizer(br.readLine());
-
-            int j = Integer.parseInt(st.nextToken());
-            int i = Integer.parseInt(st.nextToken());
-            double weight = Double.parseDouble(st.nextToken());
+            String[] vals = br.readLine().split(" ");
+            int j = Integer.parseInt(vals[0]);
+            int i = Integer.parseInt(vals[1]);
+            double weight = Double.parseDouble(vals[2]);
 
             secondLayerWeights[j][i] = weight;
          } // for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
       } // try
-      catch (IOException e)
+      catch (Exception e)
       {
-         System.out.println(e);
+         e.printStackTrace();
       }
-   } // public static void loadWeights(String filename)
+   } // public static void loadWeights()
 
    /*
     * Saves the weights of the network to a file.
     * @param filename The name of the file to save to.
     */
-   public static void saveWeights(String filename)
+   public static void saveWeights()
    {
       /*
-       * Will attempt to instantiate a printwriter then print out the weights to a file.
+       * Will attempt to save the weights.
        *
-       * If an IO Exception is caught, the exception will be printed.
+       * If an Exception is caught, the exception will be printed.
        */
       try
       {
-         PrintWriter pw = new PrintWriter(new FileWriter(filename));
+         PrintWriter pw = new PrintWriter(new FileWriter("files/weights.txt"));
 
          /*
           * Print out parameters of the network.
@@ -533,11 +542,11 @@ public class Network
 
          pw.close();
       } // try
-      catch (IOException e)
+      catch (Exception e)
       {
-         System.out.println(e);
+         e.printStackTrace();
       }
-   } // public static void saveWeights(String filename)
+   } // public static void saveWeights()
 
    /*
     * Randomizes the weights of the network.
@@ -612,7 +621,7 @@ public class Network
             evaluateNetworkTrain(testCase);
 
             error += calculateError(testCase);
-         }
+         } // for (int testCase = 0; testCase < numCases; testCase++)
 
          iter++;
 
@@ -625,7 +634,7 @@ public class Network
 
       printReport(iter, error);
 
-      saveWeights("files/weights.txt");
+      saveWeights();
    } // public static void trainNetwork()
 
    /*
