@@ -13,7 +13,7 @@ Error Threshold:
 Print Step Size (How Often to Print Training Statistics):
 5000
 Use Preloaded Weights? ("true/false"):
-false
+true
 Preloaded Weights Filepath (if applicable):
 files/weights.txt
 Output Weights Filepath (during or after training, weights may be saved.):

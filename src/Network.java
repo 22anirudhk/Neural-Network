@@ -17,6 +17,7 @@ import java.util.Scanner;
  *   - check about conditional for preloading vs randomizing weights
  *   - ask about config file structure
  *   - running vs. training in config file too?
+ *   - check that .split is ok
  *
  * @author Anirudh Kotamraju
  * @version March 28, 2022
@@ -96,45 +97,44 @@ public class Network
 
       try
       {
-         BufferedReader br = new BufferedReader(new FileReader("files/config.txt"));
+         Scanner sc = new Scanner(new FileReader("files/config.txt"));
 
-         br.readLine(); // Skip over header
+         sc.nextLine(); // Skip over header
 
          /*
           * Read in parameters of the network.
           */
-         String str = br.readLine();
-         String[] params = str.split(" ");
-         inputNodes = Integer.parseInt(params[0]);
-         hiddenLayerNodes = Integer.parseInt(params[1]);
-         outputNodes = Integer.parseInt(params[2]);
+         inputNodes = sc.nextInt();
+         hiddenLayerNodes = sc.nextInt();
+         outputNodes = sc.nextInt();
+         sc.nextLine(); // Skip over newline character.
 
-         br.readLine(); // Skip over line.
-         lowerWeightBound = Double.parseDouble(br.readLine());
+         sc.nextLine(); // Skip over line.
+         lowerWeightBound = Double.parseDouble(sc.nextLine());
 
-         br.readLine(); // Skip over line.
-         upperWeightBound = Double.parseDouble(br.readLine());
+         sc.nextLine();
+         upperWeightBound = Double.parseDouble(sc.nextLine());
 
-         br.readLine(); // Skip over line.
-         learningRate = Double.parseDouble(br.readLine());
+         sc.nextLine();
+         learningRate = Double.parseDouble(sc.nextLine());
 
-         br.readLine(); // Skip over line.
-         maxIters = Integer.parseInt(br.readLine());
+         sc.nextLine();
+         maxIters = Integer.parseInt(sc.nextLine());
 
-         br.readLine(); // Skip over line.
-         errorThreshold = Double.parseDouble(br.readLine());
+         sc.nextLine();
+         errorThreshold = Double.parseDouble(sc.nextLine());
 
-         br.readLine(); // Skip over line.
-         printStepSize = Integer.parseInt(br.readLine());
+         sc.nextLine();
+         printStepSize = Integer.parseInt(sc.nextLine());
 
-         br.readLine();
-         preloadWeights = Boolean.parseBoolean(br.readLine());
+         sc.nextLine();
+         preloadWeights = Boolean.parseBoolean(sc.nextLine());
 
-         br.readLine();
-         inputWeightsPath = br.readLine();
+         sc.nextLine();
+         inputWeightsPath = sc.nextLine();
 
-         br.readLine();
-         outputWeightsPath = br.readLine();
+         sc.nextLine();
+         outputWeightsPath = sc.nextLine();
       } // try
       catch (Exception e)
       {
@@ -480,18 +480,21 @@ public class Network
        */
       try
       {
-         BufferedReader br = new BufferedReader(new FileReader(inputWeightsPath));
+         Scanner sc = new Scanner(new File(inputWeightsPath));
 
-         br.readLine(); // Skip over header
+         sc.nextLine(); // Skip over header
 
          /*
           * Verify that the parameters of the network are correct.
           */
-         String str = br.readLine();
-         String[] params = str.split(" ");
-         int inputNum = Integer.parseInt(params[0]);
-         int hiddenNum = Integer.parseInt(params[1]);
-         int outputNum = Integer.parseInt(params[2]);
+         int inputNum = sc.nextInt();
+         int hiddenNum = sc.nextInt();
+         int outputNum = sc.nextInt();
+
+         /*
+          * Eat newline character.
+          */
+         sc.nextLine();
 
          /*
           * Printing an error message so the user can make
@@ -504,17 +507,21 @@ public class Network
           * Skip over next four lines.
           */
          for (int line = 0; line < 4; line++)
-            br.readLine();
+            sc.nextLine();
 
          /*
           * Read in firstLayerWeights.
           */
          for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
          {
-            String[] vals = br.readLine().split(" ");
-            int k = Integer.parseInt(vals[0]);
-            int j = Integer.parseInt(vals[1]);
-            double weight = Double.parseDouble(vals[2]);
+            int k = sc.nextInt();
+            int j = sc.nextInt();
+            double weight = sc.nextDouble();
+
+            /*
+             * Eat newline character.
+             */
+            sc.nextLine();
 
             firstLayerWeights[k][j] = weight;
          } // for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
@@ -523,17 +530,21 @@ public class Network
           * Skip over next four lines.
           */
          for (int line = 0; line < 4; line++)
-            br.readLine();
+            sc.nextLine();
 
          /*
           * Read in secondLayerWeights.
           */
          for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
          {
-            String[] vals = br.readLine().split(" ");
-            int j = Integer.parseInt(vals[0]);
-            int i = Integer.parseInt(vals[1]);
-            double weight = Double.parseDouble(vals[2]);
+            int j = sc.nextInt();
+            int i = sc.nextInt();
+            double weight = sc.nextDouble();
+
+            /*
+             * Eat newline character.
+             */
+            sc.nextLine();
 
             secondLayerWeights[j][i] = weight;
          } // for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
