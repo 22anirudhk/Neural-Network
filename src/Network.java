@@ -10,14 +10,11 @@ import java.util.Scanner;
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
  * TODO:
- *   - add time to complete train/run
  *   - checking documentation for everything
- *   - ask if it's okay if we instantiate BR/PW in load/saveWeights methods
+ *   - ask if it's okay if we instantiate sc/PW in load/saveWeights methods
  *   - ask if it's okay if we just put filename in allocate there
  *   - check about conditional for preloading vs randomizing weights
  *   - ask about config file structure
- *   - running vs. training in config file too?
- *   - check that .split is ok
  *
  * @author Anirudh Kotamraju
  * @version March 28, 2022
@@ -69,8 +66,17 @@ public class Network
    public static int printStepSize;             // How often to print statistics during training.
 
    public static boolean preloadWeights;        // True if preloaded weights should be used during training, else false.
+   public static boolean isTraining;            // True if training should be performed, false if running should be performed.
+
    public static String inputWeightsPath;       // Filepath to read in preloaded weights from.
    public static String outputWeightsPath;      // Filepath to output saved weights to.
+
+   public static long startingTime;             // Time at which running or training is started (in nanoseconds).
+
+   /*
+    * Can convert from nanoseconds to seconds by dividing by this constant.
+    */
+   public static final int NANO_TO_SECONDS = 1000000000;
 
    /*
     * Main method where the network is either run or trained.
@@ -78,14 +84,12 @@ public class Network
     */
    public static void main(String[] args)
    {
-      boolean run = false;
-
       config();
 
-      if (run)
-         runNetwork();
-      else
+      if (isTraining)
          trainNetwork();
+      else
+         runNetwork();
    } // public static void main(String[] args)
 
    /*
@@ -94,6 +98,8 @@ public class Network
    public static void config()
    {
       numCases = 4;
+
+      startingTime = System.nanoTime();
 
       try
       {
@@ -108,6 +114,9 @@ public class Network
          hiddenLayerNodes = sc.nextInt();
          outputNodes = sc.nextInt();
          sc.nextLine(); // Skip over newline character.
+
+         sc.nextLine();
+         isTraining = Boolean.parseBoolean(sc.nextLine());
 
          sc.nextLine(); // Skip over line.
          lowerWeightBound = Double.parseDouble(sc.nextLine());
@@ -462,6 +471,16 @@ public class Network
       System.out.println("Weights Preloaded? " + preloadWeights);
       System.out.println("Weights Input FilePath (if applicable): " + inputWeightsPath);
       System.out.println("Weights Output FilePath: " + outputWeightsPath);
+
+      /*
+       * Print time taken to complete training.
+       */
+      long endingTime = System.nanoTime();                                                 // Ending time (in nanoseconds).
+      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;    // Time for training (in seconds).
+      double roundedTime = ((double) Math.round(completionTime * 1000)) / 100;             // Rounded time for training.
+
+      System.out.println();
+      System.out.println("Training Time: " + roundedTime + " seconds");
 
       System.out.println();
       System.out.println("================== TRAINING REPORT ENDING ==================");
