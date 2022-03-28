@@ -10,13 +10,13 @@ import java.util.Scanner;
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
  * TODO:
- *   - switch to config file
- *   - in config file, specify whether you want to train with preloaded or random weights
- *   - in config file specify input weights file, output weights file
  *   - add time to complete train/run
  *   - checking documentation for everything
  *   - ask if it's okay if we instantiate BR/PW in load/saveWeights methods
  *   - ask if it's okay if we just put filename in allocate there
+ *   - check about conditional for preloading vs randomizing weights
+ *   - ask about config file structure
+ *   - running vs. training in config file too?
  *
  * @author Anirudh Kotamraju
  * @version March 28, 2022
@@ -67,6 +67,10 @@ public class Network
 
    public static int printStepSize;             // How often to print statistics during training.
 
+   public static boolean preloadWeights;        // True if preloaded weights should be used during training, else false.
+   public static String inputWeightsPath;       // Filepath to read in preloaded weights from.
+   public static String outputWeightsPath;      // Filepath to output saved weights to.
+
    /*
     * Main method where the network is either run or trained.
     * @param args Command line inputs.
@@ -88,20 +92,54 @@ public class Network
     */
    public static void config()
    {
-      inputNodes = 2;
-      hiddenLayerNodes = 5;
-      outputNodes = 3;
-
       numCases = 4;
 
-      lowerWeightBound = 0.1;
-      upperWeightBound = 1.5;
+      try
+      {
+         BufferedReader br = new BufferedReader(new FileReader("files/config.txt"));
 
-      learningRate = 0.3;
-      maxIters = 100000;
-      errorThreshold = 0.005;
+         br.readLine(); // Skip over header
 
-      printStepSize = 5000;
+         /*
+          * Read in parameters of the network.
+          */
+         String str = br.readLine();
+         String[] params = str.split(" ");
+         inputNodes = Integer.parseInt(params[0]);
+         hiddenLayerNodes = Integer.parseInt(params[1]);
+         outputNodes = Integer.parseInt(params[2]);
+
+         br.readLine(); // Skip over line.
+         lowerWeightBound = Double.parseDouble(br.readLine());
+
+         br.readLine(); // Skip over line.
+         upperWeightBound = Double.parseDouble(br.readLine());
+
+         br.readLine(); // Skip over line.
+         learningRate = Double.parseDouble(br.readLine());
+
+         br.readLine(); // Skip over line.
+         maxIters = Integer.parseInt(br.readLine());
+
+         br.readLine(); // Skip over line.
+         errorThreshold = Double.parseDouble(br.readLine());
+
+         br.readLine(); // Skip over line.
+         printStepSize = Integer.parseInt(br.readLine());
+
+         br.readLine();
+         preloadWeights = Boolean.parseBoolean(br.readLine());
+
+         br.readLine();
+         inputWeightsPath = br.readLine();
+
+         br.readLine();
+         outputWeightsPath = br.readLine();
+      } // try
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
    } // public static void config()
 
    /*
@@ -421,6 +459,11 @@ public class Network
       System.out.println("Learning Rate: " + learningRate);
 
       System.out.println();
+      System.out.println("Weights Preloaded? " + preloadWeights);
+      System.out.println("Weights Input FilePath (if applicable): " + inputWeightsPath);
+      System.out.println("Weights Output FilePath: " + outputWeightsPath);
+
+      System.out.println();
       System.out.println("================== TRAINING REPORT ENDING ==================");
    } // public static void printReport(int numIters, double finalError)
 
@@ -437,7 +480,7 @@ public class Network
        */
       try
       {
-         BufferedReader br = new BufferedReader(new FileReader("files/weights.txt"));
+         BufferedReader br = new BufferedReader(new FileReader(inputWeightsPath));
 
          br.readLine(); // Skip over header
 
@@ -514,7 +557,7 @@ public class Network
        */
       try
       {
-         PrintWriter pw = new PrintWriter(new FileWriter("files/weights.txt"));
+         PrintWriter pw = new PrintWriter(new FileWriter(outputWeightsPath));
 
          /*
           * Print out parameters of the network.
@@ -588,7 +631,11 @@ public class Network
    {
       allocateMemoryTrain();
       loadValuesTrain();
-      randomizeWeights();
+
+      if (preloadWeights)
+         loadWeights();
+      else
+         randomizeWeights();
 
       System.out.println("Training network. ");
       System.out.println();

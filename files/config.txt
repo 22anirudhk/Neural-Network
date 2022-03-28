@@ -1,0 +1,20 @@
+Network Configuration (Ex: "4 5 3"):
+2 5 3
+Lower Weight Bound:
+0.1
+Upper Weight Bound:
+1.5
+Learning Rate:
+0.3
+Max Number of Iterations:
+100000
+Error Threshold:
+0.005
+Print Step Size (How Often to Print Training Statistics):
+5000
+Use Preloaded Weights? ("true/false"):
+false
+Preloaded Weights Filepath (if applicable):
+files/weights.txt
+Output Weights Filepath (during or after training, weights may be saved.):
+files/weights.txt
