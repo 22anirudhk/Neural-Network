@@ -11,13 +11,12 @@ import java.util.Scanner;
  *
  * TODO:
  *   - checking documentation for everything
- *   - ask if it's okay if we instantiate sc/PW in load/saveWeights methods
- *   - ask if it's okay if we just put filename in allocate there
  *   - check about conditional for preloading vs randomizing weights
  *   - ask about config file structure
+ *   - reading truth table from file
  *
  * @author Anirudh Kotamraju
- * @version March 28, 2022
+ * @version March 29, 2022
  */
 public class Network
 {
@@ -64,6 +63,7 @@ public class Network
    public static double errorThreshold;         // Value of error for which training ends.
 
    public static int printStepSize;             // How often to print statistics during training.
+   public static int weightStepSize;            // How often to save weights during training.
 
    public static boolean preloadWeights;        // True if preloaded weights should be used during training, else false.
    public static boolean isTraining;            // True if training should be performed, false if running should be performed.
@@ -135,6 +135,9 @@ public class Network
 
          sc.nextLine();
          printStepSize = Integer.parseInt(sc.nextLine());
+
+         sc.nextLine();
+         weightStepSize = Integer.parseInt(sc.nextLine());
 
          sc.nextLine();
          preloadWeights = Boolean.parseBoolean(sc.nextLine());
@@ -499,7 +502,7 @@ public class Network
        */
       try
       {
-         Scanner sc = new Scanner(new File(inputWeightsPath));
+         Scanner sc = new Scanner(new File("files/" + inputWeightsPath));
 
          sc.nextLine(); // Skip over header
 
@@ -520,7 +523,7 @@ public class Network
           */
          if (inputNum != inputNodes || hiddenNum != hiddenLayerNodes || outputNum != outputNodes)
             System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
-                    "does not match the config() parameters.------------\n");
+                    "does not match the config.txt parameters.------------\n");
 
          /*
           * Skip over next four lines.
@@ -578,7 +581,7 @@ public class Network
     * Saves the weights of the network to a file.
     * @param filename The name of the file to save to.
     */
-   public static void saveWeights()
+   public static void saveWeights(String filename)
    {
       /*
        * Will attempt to save the weights.
@@ -587,7 +590,7 @@ public class Network
        */
       try
       {
-         PrintWriter pw = new PrintWriter(new FileWriter(outputWeightsPath));
+         PrintWriter pw = new PrintWriter(new FileWriter(filename));
 
          /*
           * Print out parameters of the network.
@@ -679,6 +682,8 @@ public class Network
 
       int iter = 0; // Training iteration counter.
 
+      int weightIter = 0;
+
       /*
        * Train the network while the error threshold is not met or while the number of iterations
        * is less than the maximum number of possible training iterations.
@@ -701,17 +706,24 @@ public class Network
          } // for (int testCase = 0; testCase < numCases; testCase++)
 
          iter++;
+         weightIter++;
 
          if (iter % printStepSize == 0)
-         {
             System.out.println("Iteration #" + iter + " complete. Error: " + error);
-         }
 
+         /*
+          * Save weights periodically if user requested it.
+          */
+         if (weightStepSize != -1 && weightIter % weightStepSize == 0)
+         {
+            saveWeights("files/" + iter + "-" + outputWeightsPath);
+         }
       } // while (error > errorThreshold && iter < maxIters)
 
       printReport(iter, error);
 
-      saveWeights();
+      if (weightStepSize == -1)
+         saveWeights("files/" + outputWeightsPath);
    } // public static void trainNetwork()
 
    /*
