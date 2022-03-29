@@ -12,8 +12,6 @@ import java.util.Scanner;
  * TODO:
  *   - checking documentation for everything
  *   - check about conditional for preloading vs randomizing weights
- *   - ask about config file structure
- *   - reading truth table from file
  *
  * @author Anirudh Kotamraju
  * @version March 29, 2022
@@ -98,8 +96,6 @@ public class Network
     */
    public static void config()
    {
-      numCases = 4;
-
       startingTime = System.nanoTime();
 
       try
@@ -148,6 +144,9 @@ public class Network
 
          sc.nextLine();
          outputWeightsPath = sc.nextLine();
+
+         sc.nextLine();
+         numCases = Integer.parseInt(sc.nextLine());
 
          sc.nextLine();
          testCasePath = sc.nextLine();

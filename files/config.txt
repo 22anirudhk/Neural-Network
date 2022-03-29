@@ -22,5 +22,7 @@ PRELOADED WEIGHTS FILEPATH (if applicable):
 weights.txt
 OUTPUT WEIGHTS FILEPATH (during or after training, weights may be saved.):
 weights.txt
+NUMBER OF TEST CASES:
+4
 TEST CASES FILEPATH (during or after training, weights may be saved.):
 test.txt
