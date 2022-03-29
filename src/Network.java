@@ -9,10 +9,6 @@ import java.util.Scanner;
  * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
- * TODO:
- *   - checking documentation for everything
- *   - check about conditional for preloading vs randomizing weights
- *
  * @author Anirudh Kotamraju
  * @version March 29, 2022
  */
@@ -61,14 +57,14 @@ public class Network
    public static double errorThreshold;         // Value of error for which training ends.
 
    public static int printStepSize;             // How often to print statistics during training.
-   public static int weightStepSize;            // How often to save weights during training.
+   public static int weightStepSize;            // How often to save weights during training. -1 if only upon training completion.
 
    public static boolean preloadWeights;        // True if preloaded weights should be used during training, else false.
    public static boolean isTraining;            // True if training should be performed, false if running should be performed.
 
    public static String inputWeightsPath;       // Filepath to read in preloaded weights from.
    public static String outputWeightsPath;      // Filepath to output saved weights to.
-   public static String testCasePath;           // Filepath to output saved weights to.
+   public static String testCasePath;           // Filepath to read in test cases from.
 
    public static long startingTime;             // Time at which running or training is started (in nanoseconds).
 
@@ -158,7 +154,7 @@ public class Network
    } // public static void config()
 
    /*
-    * Run the network with preloaded weights.
+    * Run the network.
     */
    public static void runNetwork()
    {
@@ -286,73 +282,6 @@ public class Network
    } // public static void allocateMemoryTrain()
 
    /*
-    * Load in the truth table that is used in running and training.
-    */
-   public static void loadTruthTable()
-   {
-      try
-      {
-         Scanner sc = new Scanner(new File("files/" + testCasePath));
-         sc.nextLine();
-
-         /*
-          * Verify that input nodes and output nodes matches.
-          */
-         int inpNodes = sc.nextInt();
-         int outNodes = sc.nextInt();
-
-         /*
-          * Printing an error message so the user can fix network configuration.
-          */
-         if (inpNodes != inputNodes || outNodes != outputNodes)
-            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
-                    "does not match the config.txt parameters.------------\n");
-
-         sc.nextLine();
-
-         /*
-          * Skip data header.
-          */
-         sc.nextLine();
-
-         /*
-          * Read in truth table.
-          */
-
-         for (int test = 0; test < numCases; test++)
-         {
-            /*
-             * Read in inputs for testcase.
-             */
-            for (int inpVals = 0; inpVals < inputNodes; inpVals++)
-            {
-               double val = sc.nextDouble();
-               testCaseInputs[test][inpVals] = val;
-            }
-
-            /*
-             * Read in outputs for testcase.
-             */
-            for (int outVals = 0; outVals < outputNodes; outVals++)
-            {
-               double val = sc.nextDouble();
-               testCaseOutputs[test][outVals] = val;
-            }
-
-            /*
-             * Skip over newline character, except for last case.
-             */
-            if (test != numCases - 1)
-               sc.nextLine();
-         } // for (int test = 0; test < numCases; test++)
-      } // try
-      catch (Exception e)
-      {
-         e.printStackTrace();
-      }
-   } // public static void loadTruthTable()
-
-   /*
     * Load in values for test input activations, expected outputs, and precalculated weights for the running process.
     */
    public static void loadValuesRun()
@@ -381,102 +310,18 @@ public class Network
    } // public static void loadValuesTrain()
 
    /*
-    * Calculate the error in the network's output.
-    * @return the error in the network's output.
-    */
-   public static double calculateError(int testCase)
-   {
-      double error = 0.0;
-
-      for (int i = 0; i < outputNodes; i++)
-      {
-         double omegai = testCaseOutputs[testCase][i] - outputActivations[i];
-         error += omegai * omegai;
-      }
-
-      return error * 0.5;
-   } // public static double calculateError(int testCase)
-
-   /*
-    * Prints a report summarizing the training process.
-    * @param numIters Number of iterations used to train the network.
-    * @param finalError The final error value the network reached.
-    */
-   public static void printReport(int numIters, double finalError)
-   {
-      System.out.println();
-      System.out.println("================== TRAINING REPORT STARTING ==================");
-      System.out.println();
-
-      System.out.println(inputNodes + " by " + hiddenLayerNodes + " by " + outputNodes + " network.");
-      System.out.println();
-
-      /*
-       * Prints different messages depending on if the error threshold was reached.
-       */
-      if (numIters < maxIters)
-         System.out.println("Error threshold reached. ");
-      else
-         System.out.println("Maximum number of iterations reached. ");
-
-      System.out.println();
-      System.out.println("Error: " + finalError);
-      System.out.println("Iterations: " + numIters);
-      System.out.println();
-
-      /*
-       * Print final outputs for test cases.
-       */
-      for (int testCase = 0; testCase < numCases; testCase++)
-      {
-         loadTestCase(testCase);
-         evaluateNetworkRun();
-         System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
-               + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
-                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
-      } // for (int testCase = 0; testCase < numCases; testCase++)
-
-      System.out.println();
-
-      System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
-      System.out.println("Max Iterations: " + maxIters);
-      System.out.println("Error Threshold: " + errorThreshold);
-      System.out.println("Learning Rate: " + learningRate);
-
-      System.out.println();
-      System.out.println("Weights Preloaded? " + preloadWeights);
-      System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
-      System.out.println("Weights Output File: " + outputWeightsPath);
-      System.out.println("Test Cases File: " + testCasePath);
-
-      /*
-       * Print time taken to complete training.
-       */
-      long endingTime = System.nanoTime();                                                 // Ending time (in nanoseconds).
-      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;    // Time for training (in seconds).
-      double roundedTime = ((double) Math.round(completionTime * 1000)) / 100;             // Rounded time for training.
-
-      System.out.println();
-      System.out.println("Training Time: " + roundedTime + " seconds");
-
-      System.out.println();
-      System.out.println("================== TRAINING REPORT ENDING ==================");
-   } // public static void printReport(int numIters, double finalError)
-
-   /*
     * Loads weights from a file into the network.
-    * @param filename The name of the file to read.
     */
    public static void loadWeights()
    {
       /*
        * Will attempt to read weights from the file into the network.
        *
-       * If an IO Exception is caught, the exception will be printed.
+       * If an Exception is caught, the exception will be printed.
        */
       try
       {
-         Scanner sc = new Scanner(new File("files/" + inputWeightsPath));
+         Scanner sc = new Scanner(new File(inputWeightsPath));
 
          sc.nextLine(); // Skip over header
 
@@ -538,7 +383,7 @@ public class Network
             double weight = sc.nextDouble();
 
             /*
-             * Eat newline character.
+             * Read newline character.
              */
             sc.nextLine();
 
@@ -621,6 +466,73 @@ public class Network
    } // public static void randomizeWeights()
 
    /*
+    * Load in the truth table that is used in running and training.
+    */
+   public static void loadTruthTable()
+   {
+      try
+      {
+         Scanner sc = new Scanner(new File(testCasePath));
+         sc.nextLine();
+
+         /*
+          * Verify that input nodes and output nodes matches.
+          */
+         int inpNodes = sc.nextInt();
+         int outNodes = sc.nextInt();
+
+         /*
+          * Printing an error message so the user can fix network configuration.
+          */
+         if (inpNodes != inputNodes || outNodes != outputNodes)
+            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
+                    "does not match the config.txt parameters.------------\n");
+
+         sc.nextLine();
+
+         /*
+          * Skip data header.
+          */
+         sc.nextLine();
+
+         /*
+          * Read in truth table.
+          */
+
+         for (int test = 0; test < numCases; test++)
+         {
+            /*
+             * Read in inputs for testcase.
+             */
+            for (int inpVals = 0; inpVals < inputNodes; inpVals++)
+            {
+               double val = sc.nextDouble();
+               testCaseInputs[test][inpVals] = val;
+            }
+
+            /*
+             * Read in outputs for testcase.
+             */
+            for (int outVals = 0; outVals < outputNodes; outVals++)
+            {
+               double val = sc.nextDouble();
+               testCaseOutputs[test][outVals] = val;
+            }
+
+            /*
+             * Skip over newline character, except for last case.
+             */
+            if (test != numCases - 1)
+               sc.nextLine();
+         } // for (int test = 0; test < numCases; test++)
+      } // try
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
+   } // public static void loadTruthTable()
+
+   /*
     * Loads a test case, specified by an integer number, into the inputs of the network.
     * @param testCase The test case to be loaded into the network.
     */
@@ -629,6 +541,90 @@ public class Network
       for (int inp = 0; inp < inputNodes; inp++)
          inputActivations[inp] = testCaseInputs[testCase][inp];
    }
+
+   /*
+    * Calculate the error in the network's output.
+    * @param testCase Test case to calculate error upon.
+    * @return the error in the network's output.
+    */
+   public static double calculateError(int testCase)
+   {
+      double error = 0.0;
+
+      for (int i = 0; i < outputNodes; i++)
+      {
+         double omegai = testCaseOutputs[testCase][i] - outputActivations[i];
+         error += omegai * omegai;
+      }
+
+      return error * 0.5;
+   } // public static double calculateError(int testCase)
+
+   /*
+    * Prints a report summarizing the training process.
+    * @param numIters Number of iterations used to train the network.
+    * @param finalError The final error value the network reached.
+    */
+   public static void printReport(int numIters, double finalError)
+   {
+      System.out.println();
+      System.out.println("================== TRAINING REPORT STARTING ==================");
+      System.out.println();
+
+      System.out.println(inputNodes + " by " + hiddenLayerNodes + " by " + outputNodes + " network.");
+      System.out.println();
+
+      /*
+       * Prints different messages depending on if the error threshold was reached.
+       */
+      if (numIters < maxIters)
+         System.out.println("Error threshold reached. ");
+      else
+         System.out.println("Maximum number of iterations reached. ");
+
+      System.out.println();
+      System.out.println("Error: " + finalError);
+      System.out.println("Iterations: " + numIters);
+      System.out.println();
+
+      /*
+       * Print final outputs for test cases.
+       */
+      for (int testCase = 0; testCase < numCases; testCase++)
+      {
+         loadTestCase(testCase);
+         evaluateNetworkRun();
+         System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
+               + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
+                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
+      } // for (int testCase = 0; testCase < numCases; testCase++)
+
+      System.out.println();
+
+      System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
+      System.out.println("Max Iterations: " + maxIters);
+      System.out.println("Error Threshold: " + errorThreshold);
+      System.out.println("Learning Rate: " + learningRate);
+
+      System.out.println();
+      System.out.println("Weights Preloaded? " + preloadWeights);
+      System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
+      System.out.println("Weights Output File: " + outputWeightsPath);
+      System.out.println("Test Cases File: " + testCasePath);
+
+      /*
+       * Print time taken to complete training.
+       */
+      long endingTime = System.nanoTime();                                                 // Ending time (in nanoseconds).
+      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;    // Time for training (in seconds).
+      double roundedTime = ((double) Math.round(completionTime * 1000)) / 100;             // Rounded time for training.
+
+      System.out.println();
+      System.out.println("Training Time: " + roundedTime + " seconds");
+
+      System.out.println();
+      System.out.println("================== TRAINING REPORT ENDING ==================");
+   } // public static void printReport(int numIters, double finalError)
 
    /*
     * Trains the network by minimizing the error function that defines the difference between
@@ -691,14 +687,14 @@ public class Network
           */
          if (weightStepSize != -1 && weightIter % weightStepSize == 0)
          {
-            saveWeights("files/" + iter + "-" + outputWeightsPath);
+            saveWeights(outputWeightsPath);
          }
       } // while (error > errorThreshold && iter < maxIters)
 
       printReport(iter, error);
 
       if (weightStepSize == -1)
-         saveWeights("files/" + outputWeightsPath);
+         saveWeights(outputWeightsPath);
    } // public static void trainNetwork()
 
    /*

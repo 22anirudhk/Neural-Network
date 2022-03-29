@@ -19,10 +19,10 @@ WEIGHT SAVE STEP SIZE (How Often to Save Weights). Enter -1 for weights to only 
 USE PRELOADED WEIGHTS FOR TRAINING? ("true/false"):
 false
 PRELOADED WEIGHTS FILEPATH (if applicable):
-weights.txt
+files/weights.txt
 OUTPUT WEIGHTS FILEPATH (during or after training, weights may be saved.):
-weights.txt
+files/weights.txt
 NUMBER OF TEST CASES:
 4
 TEST CASES FILEPATH (during or after training, weights may be saved.):
-test.txt
+files/test.txt
