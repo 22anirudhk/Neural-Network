@@ -70,6 +70,7 @@ public class Network
 
    public static String inputWeightsPath;       // Filepath to read in preloaded weights from.
    public static String outputWeightsPath;      // Filepath to output saved weights to.
+   public static String testCasePath;           // Filepath to output saved weights to.
 
    public static long startingTime;             // Time at which running or training is started (in nanoseconds).
 
@@ -147,6 +148,9 @@ public class Network
 
          sc.nextLine();
          outputWeightsPath = sc.nextLine();
+
+         sc.nextLine();
+         testCasePath = sc.nextLine();
       } // try
       catch (Exception e)
       {
@@ -283,6 +287,73 @@ public class Network
    } // public static void allocateMemoryTrain()
 
    /*
+    * Load in the truth table that is used in running and training.
+    */
+   public static void loadTruthTable()
+   {
+      try
+      {
+         Scanner sc = new Scanner(new File("files/" + testCasePath));
+         sc.nextLine();
+
+         /*
+          * Verify that input nodes and output nodes matches.
+          */
+         int inpNodes = sc.nextInt();
+         int outNodes = sc.nextInt();
+
+         /*
+          * Printing an error message so the user can fix network configuration.
+          */
+         if (inpNodes != inputNodes || outNodes != outputNodes)
+            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
+                    "does not match the config.txt parameters.------------\n");
+
+         sc.nextLine();
+
+         /*
+          * Skip data header.
+          */
+         sc.nextLine();
+
+         /*
+          * Read in truth table.
+          */
+
+         for (int test = 0; test < numCases; test++)
+         {
+            /*
+             * Read in inputs for testcase.
+             */
+            for (int inpVals = 0; inpVals < inputNodes; inpVals++)
+            {
+               double val = sc.nextDouble();
+               testCaseInputs[test][inpVals] = val;
+            }
+
+            /*
+             * Read in outputs for testcase.
+             */
+            for (int outVals = 0; outVals < outputNodes; outVals++)
+            {
+               double val = sc.nextDouble();
+               testCaseOutputs[test][outVals] = val;
+            }
+
+            /*
+             * Skip over newline character, except for last case.
+             */
+            if (test != numCases - 1)
+               sc.nextLine();
+         } // for (int test = 0; test < numCases; test++)
+      } // try
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
+   } // public static void loadTruthTable()
+
+   /*
     * Load in values for test input activations, expected outputs, and precalculated weights for the running process.
     */
    public static void loadValuesRun()
@@ -295,56 +366,9 @@ public class Network
       loadWeights();
 
       /*
-       * First test case inputs.
+       * Load in the test cases from a file.
        */
-      testCaseInputs[0][0] = 0.0;
-      testCaseInputs[0][1] = 0.0;
-
-      /*
-       * First test case outputs.
-       */
-      testCaseOutputs[0][0] = 0.0;              // OR
-      testCaseOutputs[0][1] = 0.0;              // AND
-      testCaseOutputs[0][2] = 0.0;              // XOR
-
-      /*
-       * Second test case inputs.
-       */
-      testCaseInputs[1][0] = 0.0;
-      testCaseInputs[1][1] = 1.0;
-
-      /*
-       * Second test case outputs.
-       */
-      testCaseOutputs[1][0] = 1.0;              // OR
-      testCaseOutputs[1][1] = 0.0;              // AND
-      testCaseOutputs[1][2] = 1.0;              // XOR
-
-      /*
-       * Third test case inputs.
-       */
-      testCaseInputs[2][0] = 1.0;
-      testCaseInputs[2][1] = 0.0;
-
-      /*
-       * Third test case outputs.
-       */
-      testCaseOutputs[2][0] = 1.0;              // OR
-      testCaseOutputs[2][1] = 0.0;              // AND
-      testCaseOutputs[2][2] = 1.0;              // XOR
-
-      /*
-       * Fourth test case inputs.
-       */
-      testCaseInputs[3][0] = 1.0;
-      testCaseInputs[3][1] = 1.0;
-
-      /*
-       * Fourth test case outputs.
-       */
-      testCaseOutputs[3][0] = 1.0;              // OR
-      testCaseOutputs[3][1] = 1.0;              // AND
-      testCaseOutputs[3][2] = 0.0;              // XOR
+      loadTruthTable();
    } // public static void loadValuesRun()
 
    /*
@@ -354,57 +378,7 @@ public class Network
    {
       System.out.println("Loading values.");
 
-      /*
-       * First test case inputs.
-       */
-      testCaseInputs[0][0] = 0.0;
-      testCaseInputs[0][1] = 0.0;
-
-      /*
-       * First test case outputs.
-       */
-      testCaseOutputs[0][0] = 0.0;              // OR
-      testCaseOutputs[0][1] = 0.0;              // AND
-      testCaseOutputs[0][2] = 0.0;              // XOR
-
-      /*
-       * Second test case inputs.
-       */
-      testCaseInputs[1][0] = 0.0;
-      testCaseInputs[1][1] = 1.0;
-
-      /*
-       * Second test case outputs.
-       */
-      testCaseOutputs[1][0] = 1.0;              // OR
-      testCaseOutputs[1][1] = 0.0;              // AND
-      testCaseOutputs[1][2] = 1.0;              // XOR
-
-      /*
-       * Third test case inputs.
-       */
-      testCaseInputs[2][0] = 1.0;
-      testCaseInputs[2][1] = 0.0;
-
-      /*
-       * Third test case outputs.
-       */
-      testCaseOutputs[2][0] = 1.0;              // OR
-      testCaseOutputs[2][1] = 0.0;              // AND
-      testCaseOutputs[2][2] = 1.0;              // XOR
-
-      /*
-       * Fourth test case inputs.
-       */
-      testCaseInputs[3][0] = 1.0;
-      testCaseInputs[3][1] = 1.0;
-
-      /*
-       * Fourth test case outputs.
-       */
-      testCaseOutputs[3][0] = 1.0;              // OR
-      testCaseOutputs[3][1] = 1.0;              // AND
-      testCaseOutputs[3][2] = 0.0;              // XOR
+      loadTruthTable();
    } // public static void loadValuesTrain()
 
    /*
@@ -472,8 +446,9 @@ public class Network
 
       System.out.println();
       System.out.println("Weights Preloaded? " + preloadWeights);
-      System.out.println("Weights Input FilePath (if applicable): " + inputWeightsPath);
-      System.out.println("Weights Output FilePath: " + outputWeightsPath);
+      System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
+      System.out.println("Weights Output File: " + outputWeightsPath);
+      System.out.println("Test Cases File: " + testCasePath);
 
       /*
        * Print time taken to complete training.
@@ -519,7 +494,7 @@ public class Network
          sc.nextLine();
 
          /*
-          * Printing an error message so the user can make
+          * Printing an error message so the user can fix network configuration.
           */
          if (inputNum != inputNodes || hiddenNum != hiddenLayerNodes || outputNum != outputNodes)
             System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
@@ -674,7 +649,7 @@ public class Network
       System.out.println();
 
       /*
-       * Calculate initial error of network with randomized weights.
+       * Calculate initial error of network.
        */
       double error = 0.0;
       for (int testcase = 0; testcase < numCases; testcase++)
@@ -699,10 +674,11 @@ public class Network
          {
             loadTestCase(testCase);
             evaluateNetworkTrain(testCase);
-            updateWeights();
-            evaluateNetworkTrain(testCase);
 
             error += calculateError(testCase);
+
+            updateWeights();
+            evaluateNetworkTrain(testCase);
          } // for (int testCase = 0; testCase < numCases; testCase++)
 
          iter++;

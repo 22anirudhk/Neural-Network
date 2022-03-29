@@ -16,9 +16,11 @@ PRINT STEP SIZE (How Often to Print Training Statistics):
 5000
 WEIGHT SAVE STEP SIZE (How Often to Save Weights). Enter -1 for weights to only be saved upon training completion:
 -1
-USE PRELOADED WEIGHTS? ("true/false"):
+USE PRELOADED WEIGHTS FOR TRAINING? ("true/false"):
 false
 PRELOADED WEIGHTS FILEPATH (if applicable):
 weights.txt
 OUTPUT WEIGHTS FILEPATH (during or after training, weights may be saved.):
 weights.txt
+TEST CASES FILEPATH (during or after training, weights may be saved.):
+test.txt
