@@ -74,6 +74,11 @@ public class Network
    public static final int NANO_TO_SECONDS = 1000000000;
 
    /*
+    * Used to round number to 2 decimal places.
+    */
+   public static final int ROUNDING_VAL = 100;
+
+   /*
     * Main method where the network is either run or trained.
     * @param args Command line inputs.
     */
@@ -476,13 +481,13 @@ public class Network
          sc.nextLine();
 
          /*
-          * Verify that input nodes and output nodes matches.
+          * Verify that number of input nodes and output nodes is correct.
           */
          int inpNodes = sc.nextInt();
          int outNodes = sc.nextInt();
 
          /*
-          * Printing an error message so the user can fix network configuration.
+          * Printing an error message if the number is incorrect, so the user can fix the network configuration.
           */
          if (inpNodes != inputNodes || outNodes != outputNodes)
             System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
@@ -498,7 +503,6 @@ public class Network
          /*
           * Read in truth table.
           */
-
          for (int test = 0; test < numCases; test++)
          {
             /*
@@ -615,9 +619,9 @@ public class Network
       /*
        * Print time taken to complete training.
        */
-      long endingTime = System.nanoTime();                                                 // Ending time (in nanoseconds).
-      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;    // Time for training (in seconds).
-      double roundedTime = ((double) Math.round(completionTime * 1000)) / 100;             // Rounded time for training.
+      long endingTime = System.nanoTime();                                                      // Ending time (in nanoseconds).
+      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;         // Time for training (in seconds).
+      double roundedTime = ((double) Math.round(completionTime * ROUNDING_VAL)) / ROUNDING_VAL; // Rounded time for training.
 
       System.out.println();
       System.out.println("Training Time: " + roundedTime + " seconds");
@@ -725,7 +729,7 @@ public class Network
       } // for (int j = 0; j < hiddenLayerNodes; j++)
 
       /*
-       * Calculate output layer activations by looping through each weight connecting the hidden layer the and output layer.
+       * Calculate output layer activations by looping through each weight connecting the hidden layer and output layer.
        */
       for (int i = 0; i < outputNodes; i++)
       {
@@ -752,7 +756,7 @@ public class Network
 
    /*
     * Updates the weights of the network to minimize the error of the network's output layer for
-    * a given test case.
+    * a given test case with backpropagation.
     */
    public static void updateWeights()
    {
@@ -788,7 +792,7 @@ public class Network
 
             double weightChangekj = learningRate * inputActivations[k] * upperPsij;
 
-            firstLayerWeights[k][j] += weightChangekj; // Store changes for each weight.
+            firstLayerWeights[k][j] += weightChangekj;     // Store changes for each weight.
          } // for (int j = 0; j < hiddenLayerNodes; j++)
       } // for (int k = 0; k < inputNodes; k++)
    } // public static void updateWeights(int testCase)
