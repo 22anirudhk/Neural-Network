@@ -40,7 +40,6 @@ public class Network
    public static double[][] testCaseOutputs;    // Outputs for each test case.
 
    public static double[] psiiValues;           // Values for each psii calculated when evaluating the network for training.
-   public static double[] omegajValues;         // Values for each omegaj calculated when evaluating the network for training.
    public static double[] thetajValues;         // Values for each theta j calculated when evaluating the network for training.
    public static double[] thetaiValues;         // Values for each theta i calculated when evaluating the network for training.
 
@@ -69,9 +68,9 @@ public class Network
    public static long startingTime;             // Time at which running or training is started (in nanoseconds).
 
    /*
-    * Can convert from nanoseconds to seconds by dividing by this constant.
+    * Can convert from nanoseconds to milliseconds by dividing by this constant.
     */
-   public static final int NANO_TO_SECONDS = 1000000000;
+   public static final int NANO_TO_MILLI = 1000000;
 
    /*
     * Used to round number to 2 decimal places.
@@ -281,7 +280,6 @@ public class Network
       testCaseOutputs = new double[numCases][outputNodes];
 
       psiiValues = new double[outputNodes];
-      omegajValues = new double[hiddenLayerNodes];
       thetaiValues = new double[outputNodes];
       thetajValues = new double[hiddenLayerNodes];
    } // public static void allocateMemoryTrain()
@@ -620,11 +618,11 @@ public class Network
        * Print time taken to complete training.
        */
       long endingTime = System.nanoTime();                                                      // Ending time (in nanoseconds).
-      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_SECONDS;         // Time for training (in seconds).
+      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_MILLI;           // Time for training (in millisec).
       double roundedTime = ((double) Math.round(completionTime * ROUNDING_VAL)) / ROUNDING_VAL; // Rounded time for training.
 
       System.out.println();
-      System.out.println("Training Time: " + roundedTime + " seconds");
+      System.out.println("Training Time: " + roundedTime + " milliseconds");
 
       System.out.println();
       System.out.println("================== TRAINING REPORT ENDING ==================");
@@ -755,31 +753,10 @@ public class Network
    } // public static void evaluateNetworkTrain()
 
    /*
-    * Updates the weights of the network to minimize the error of the network's output layer for
-    * a given test case with backpropagation.
+    * Updates the weights of the network to minimize the error of the network's output layer with backpropagation.
     */
    public static void updateWeights()
    {
-      /*
-       * Updating weight connecting hidden node j and output node i.
-       */
-      for (int j = 0; j < hiddenLayerNodes; j++)
-      {
-         double omegaj = 0.0;
-
-         for (int i = 0; i < outputNodes; i++)
-         {
-            double psii = psiiValues[i];
-            omegaj += psii * secondLayerWeights[j][i];
-
-            double weightChangeji = learningRate * hiddenActivations[j] * psii;
-
-            secondLayerWeights[j][i] += weightChangeji;    // Store changes for each weight.
-         } // for (int i = 0; i < outputNodes; i++)
-
-         omegajValues[j] = omegaj;                         // Store omegaj values, which are needed for updating kj weights.
-      } // for (int j = 0; j < hiddenLayerNodes; j++)
-
       /*
        * Updating weight connecting input node k and hidden node j.
        */
@@ -787,15 +764,27 @@ public class Network
       {
          for (int j = 0; j < hiddenLayerNodes; j++)
          {
+            double omegaj = 0.0;
+
+            for (int i = 0; i < outputNodes; i++)
+            {
+               double psii = psiiValues[i];
+               omegaj += psii * secondLayerWeights[j][i];
+
+               double weightChangeji = learningRate * hiddenActivations[j] * psii;
+
+               secondLayerWeights[j][i] += weightChangeji;    // Store changes for each weight.
+            } // for (int i = 0; i < outputNodes; i++)
+
             double thetaj = thetajValues[j];
-            double upperPsij = omegajValues[j] * fPrime(thetaj);
+            double upperPsij = omegaj * fPrime(thetaj);
 
             double weightChangekj = learningRate * inputActivations[k] * upperPsij;
 
-            firstLayerWeights[k][j] += weightChangekj;     // Store changes for each weight.
+            firstLayerWeights[k][j] += weightChangekj;        // Store changes for each weight.
          } // for (int j = 0; j < hiddenLayerNodes; j++)
       } // for (int k = 0; k < inputNodes; k++)
-   } // public static void updateWeights(int testCase)
+   } // public static void updateWeights
 
    /*
     * Generate a random number between certain bounds: [lower, upper).
