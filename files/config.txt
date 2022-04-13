@@ -1,7 +1,7 @@
 NETWORK CONFIGURATION (Ex: "4 5 3"):
-2 5 5 3
+2 5 20 3
 TRAIN? ("true" if training, "false" if running):
-false
+true
 LOWER WEIGHT BOUND:
 0.1
 UPPER WEIGHT BOUND:

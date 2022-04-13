@@ -3,14 +3,14 @@ import java.util.Arrays;
 import java.util.Scanner;
 
 /*
- * This class represents an A by B by C perceptron. There are A neurons in the input layer,
- * B neurons in the hidden layer, and C neurons in the output layer.
+ * This class represents an A by B by C by D perceptron. There are A neurons in the input layer,
+ * B neurons in the first hidden layer, and C neurons in the second hidden layer, and D neurons in the output layer.
  *
  * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
  * @author Anirudh Kotamraju
- * @version March 29, 2022
+ * @version April 13, 2022
  */
 public class Network
 {
@@ -21,16 +21,6 @@ public class Network
    public static double[][] firstLayerWeights;  // Weights connecting the input and first hidden layer.
    public static double[][] secondLayerWeights; // Weights connecting the first hidden and second hidden layer.
    public static double[][] thirdLayerWeights;  // Weights connecting the second hidden and output layer.
-
-   /*
-    * Changes in weights between each training iteration.
-    */
-   public static double[][] firstLayerWeightChanges;
-
-   /*
-    * Changes in weights between each training iteration.
-    */
-   public static double[][] secondLayerWeightChanges;
 
    /*
     * Activations for the input layer.
@@ -57,6 +47,9 @@ public class Network
    public static double[][] testCaseOutputs;    // Outputs for each test case.
 
    public static double[] psiiValues;           // Values for each psii calculated when evaluating the network for training.
+   public static double[] psijValues;           // Values for each psij calculated when evaluating the network for training.
+
+   public static double[] thetakValues;         // Values for each theta k calculated when evaluating the network for training.
    public static double[] thetajValues;         // Values for each theta j calculated when evaluating the network for training.
    public static double[] thetaiValues;         // Values for each theta i calculated when evaluating the network for training.
 
@@ -330,8 +323,11 @@ public class Network
       testCaseOutputs = new double[numCases][outputNodes];
 
       psiiValues = new double[outputNodes];
+      psijValues = new double[secondHiddenNodes];
+
       thetaiValues = new double[outputNodes];
-      thetajValues = new double[firstHiddenNodes];
+      thetajValues = new double[secondHiddenNodes];
+      thetakValues = new double[firstHiddenNodes];
    } // public static void allocateMemoryTrain()
 
    /*
@@ -367,86 +363,111 @@ public class Network
     */
    public static void loadWeights()
    {
-//      /*
-//       * Will attempt to read weights from the file into the network.
-//       *
-//       * If an Exception is caught, the exception will be printed.
-//       */
-//      try
-//      {
-//         Scanner sc = new Scanner(new File(inputWeightsPath));
-//
-//         sc.nextLine(); // Skip over header
-//
-//         /*
-//          * Verify that the parameters of the network are correct.
-//          */
-//         int inputNum = sc.nextInt();
-//         int hiddenNum = sc.nextInt();
-//         int outputNum = sc.nextInt();
-//
-//         /*
-//          * Eat newline character.
-//          */
-//         sc.nextLine();
-//
-//         /*
-//          * Printing an error message so the user can fix network configuration.
-//          */
-//         if (inputNum != inputNodes || hiddenNum != hiddenLayerNodes || outputNum != outputNodes)
-//            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
-//                    "does not match the config.txt parameters.------------\n");
-//
-//         /*
-//          * Skip over next four lines.
-//          */
-//         for (int line = 0; line < 4; line++)
-//            sc.nextLine();
-//
-//         /*
-//          * Read in firstLayerWeights.
-//          */
-//         for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
-//         {
-//            int k = sc.nextInt();
-//            int j = sc.nextInt();
-//            double weight = sc.nextDouble();
-//
-//            /*
-//             * Eat newline character.
-//             */
-//            sc.nextLine();
-//
-//            firstLayerWeights[k][j] = weight;
-//         } // for (int line = 0; line < inputNodes * hiddenLayerNodes; line++)
-//
-//         /*
-//          * Skip over next four lines.
-//          */
-//         for (int line = 0; line < 4; line++)
-//            sc.nextLine();
-//
-//         /*
-//          * Read in secondLayerWeights.
-//          */
-//         for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
-//         {
-//            int j = sc.nextInt();
-//            int i = sc.nextInt();
-//            double weight = sc.nextDouble();
-//
-//            /*
-//             * Read newline character.
-//             */
-//            sc.nextLine();
-//
-//            secondLayerWeights[j][i] = weight;
-//         } // for (int line = 0; line < hiddenLayerNodes * outputNodes; line++)
-//      } // try
-//      catch (Exception e)
-//      {
-//         e.printStackTrace();
-//      }
+      /*
+       * Will attempt to read weights from the file into the network.
+       *
+       * If an Exception is caught, the exception will be printed.
+       */
+      try
+      {
+         Scanner sc = new Scanner(new File(inputWeightsPath));
+
+         sc.nextLine(); // Skip over header
+
+         /*
+          * Verify that the parameters of the network are correct.
+          */
+         int inputNum = sc.nextInt();
+         int firstHiddenNum = sc.nextInt();
+         int secondHiddenNum = sc.nextInt();
+         int outputNum = sc.nextInt();
+
+         /*
+          * Eat newline character.
+          */
+         sc.nextLine();
+
+         /*
+          * Printing an error message so the user can fix network configuration.
+          */
+         if (inputNum != inputNodes || firstHiddenNum != firstHiddenNodes || secondHiddenNum != secondHiddenNodes
+                 || outputNum != outputNodes)
+            System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
+                    "does not match the config.txt parameters.------------\n");
+
+         /*
+          * Skip over next four lines.
+          */
+         for (int line = 0; line < 4; line++)
+            sc.nextLine();
+
+         /*
+          * Read in firstLayerWeights.
+          */
+         for (int line = 0; line < inputNodes * firstHiddenNodes; line++)
+         {
+            int m = sc.nextInt();
+            int k = sc.nextInt();
+            double weight = sc.nextDouble();
+
+            /*
+             * Eat newline character.
+             */
+            sc.nextLine();
+
+            firstLayerWeights[m][k] = weight;
+         } // for (int line = 0; line < inputNodes * firstHiddenNodes; line++)
+
+         /*
+          * Skip over next four lines.
+          */
+         for (int line = 0; line < 4; line++)
+            sc.nextLine();
+
+         /*
+          * Read in secondLayerWeights.
+          */
+         for (int line = 0; line < firstHiddenNodes * secondHiddenNodes; line++)
+         {
+            int k = sc.nextInt();
+            int j = sc.nextInt();
+            double weight = sc.nextDouble();
+
+            /*
+             * Read newline character.
+             */
+            sc.nextLine();
+
+            secondLayerWeights[k][j] = weight;
+         } // for (int line = 0; line < firstHiddenNodes * secondHiddenNodes; line++)
+
+         /*
+          * Skip over next four lines.
+          */
+         for (int line = 0; line < 4; line++)
+            sc.nextLine();
+
+         /*
+          * Read in thirdLayerWeights.
+          */
+         for (int line = 0; line < secondHiddenNodes * outputNodes; line++)
+         {
+            int j = sc.nextInt();
+            int i = sc.nextInt();
+            double weight = sc.nextDouble();
+
+            /*
+             * Read newline character.
+             */
+            sc.nextLine();
+
+            thirdLayerWeights[j][i] = weight;
+         } // for (int line = 0; line < secondHiddenNodes * outputNodes; line++)
+      } // try
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
    } // public static void loadWeights()
 
    /*
@@ -455,45 +476,54 @@ public class Network
     */
    public static void saveWeights(String filename)
    {
-//      /*
-//       * Will attempt to save the weights.
-//       *
-//       * If an Exception is caught, the exception will be printed.
-//       */
-//      try
-//      {
-//         PrintWriter pw = new PrintWriter(new FileWriter(filename));
-//
-//         /*
-//          * Print out parameters of the network.
-//          */
-//         pw.println("first_layer_nodes (second_layer_nodes third_layer_nodes ...)");
-//         pw.println(inputNodes + " " + hiddenLayerNodes + " " + outputNodes);
-//         pw.println();
-//
-//         pw.println("first_layer_weights:");
-//         pw.println();
-//         pw.println("starting_node ending_node weight_value");
-//
-//         for (int r = 0; r < firstLayerWeights.length; r++)
-//            for (int c = 0; c < firstLayerWeights[0].length; c++)
-//               pw.println(r + " " + c + " " + firstLayerWeights[r][c]);
-//         pw.println();
-//
-//         pw.println("second_layer_weights:");
-//         pw.println();
-//         pw.println("starting_node ending_node weight_value");
-//
-//         for (int r = 0; r < secondLayerWeights.length; r++)
-//            for (int c = 0; c < secondLayerWeights[0].length; c++)
-//               pw.println(r + " " + c + " " + secondLayerWeights[r][c]);
-//
-//         pw.close();
-//      } // try
-//      catch (Exception e)
-//      {
-//         e.printStackTrace();
-//      }
+      /*
+       * Will attempt to save the weights.
+       *
+       * If an Exception is caught, the exception will be printed.
+       */
+      try
+      {
+         PrintWriter pw = new PrintWriter(new FileWriter(filename));
+
+         /*
+          * Print out parameters of the network.
+          */
+         pw.println("first_layer_nodes (second_layer_nodes third_layer_nodes ...)");
+         pw.println(inputNodes + " " + firstHiddenNodes + " " + secondHiddenNodes + " " + outputNodes);
+         pw.println();
+
+         pw.println("first_layer_weights:");
+         pw.println();
+         pw.println("starting_node ending_node weight_value");
+
+         for (int r = 0; r < inputNodes; r++)
+            for (int c = 0; c < firstHiddenNodes; c++)
+               pw.println(r + " " + c + " " + firstLayerWeights[r][c]);
+         pw.println();
+
+         pw.println("second_layer_weights:");
+         pw.println();
+         pw.println("starting_node ending_node weight_value");
+
+         for (int r = 0; r < firstHiddenNodes; r++)
+            for (int c = 0; c < secondHiddenNodes; c++)
+               pw.println(r + " " + c + " " + secondLayerWeights[r][c]);
+         pw.println();
+
+         pw.println("third_layer_weights:");
+         pw.println();
+         pw.println("starting_node ending_node weight_value");
+
+         for (int r = 0; r < secondHiddenNodes; r++)
+            for (int c = 0; c < outputNodes; c++)
+               pw.println(r + " " + c + " " + thirdLayerWeights[r][c]);
+
+         pw.close();
+      } // try
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
    } // public static void saveWeights()
 
    /*
@@ -501,21 +531,28 @@ public class Network
     */
    public static void randomizeWeights()
    {
-//      System.out.println("Randomizing weights. ");
-//
-//      /*
-//       * Randomize weights connecting input layer and hidden layer.
-//       */
-//      for (int k = 0; k < inputNodes; k++)
-//         for (int j = 0; j < hiddenLayerNodes; j++)
-//            firstLayerWeights[k][j] = randomNumber(lowerWeightBound, upperWeightBound);
-//
-//      /*
-//       * Randomize weights connecting hidden layer and output layer.
-//       */
-//      for (int j = 0; j < hiddenLayerNodes; j++)
-//         for (int i = 0; i < outputNodes; i++)
-//            secondLayerWeights[j][i] = randomNumber(lowerWeightBound, upperWeightBound);
+      System.out.println("Randomizing weights. ");
+
+      /*
+       * Randomize weights connecting m layer and k layer.
+       */
+      for (int m = 0; m < inputNodes; m++)
+         for (int k = 0; k < firstHiddenNodes; k++)
+            firstLayerWeights[m][k] = randomNumber(lowerWeightBound, upperWeightBound);
+
+      /*
+       * Randomize weights connecting k layer and j layer.
+       */
+      for (int k = 0; k < firstHiddenNodes; k++)
+         for (int j = 0; j < secondHiddenNodes; j++)
+            secondLayerWeights[k][j] = randomNumber(lowerWeightBound, upperWeightBound);
+
+      /*
+       * Randomize weights connecting j layer and i layer.
+       */
+      for (int j = 0; j < secondHiddenNodes; j++)
+         for (int i = 0; i < outputNodes; i++)
+            thirdLayerWeights[j][i] = randomNumber(lowerWeightBound, upperWeightBound);
    } // public static void randomizeWeights()
 
    /*
@@ -619,63 +656,64 @@ public class Network
     */
    public static void printReport(int numIters, double finalError)
    {
-//      System.out.println();
-//      System.out.println("================== TRAINING REPORT STARTING ==================");
-//      System.out.println();
-//
-//      System.out.println(inputNodes + " by " + hiddenLayerNodes + " by " + outputNodes + " network.");
-//      System.out.println();
-//
-//      /*
-//       * Prints different messages depending on if the error threshold was reached.
-//       */
-//      if (numIters < maxIters)
-//         System.out.println("Error threshold reached. ");
-//      else
-//         System.out.println("Maximum number of iterations reached. ");
-//
-//      System.out.println();
-//      System.out.println("Error: " + finalError);
-//      System.out.println("Iterations: " + numIters);
-//      System.out.println();
-//
-//      /*
-//       * Print final outputs for test cases.
-//       */
-//      for (int testCase = 0; testCase < numCases; testCase++)
-//      {
-//         loadTestCase(testCase);
-//         evaluateNetworkRun();
-//         System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
-//               + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
-//                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
-//      } // for (int testCase = 0; testCase < numCases; testCase++)
-//
-//      System.out.println();
-//
-//      System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
-//      System.out.println("Max Iterations: " + maxIters);
-//      System.out.println("Error Threshold: " + errorThreshold);
-//      System.out.println("Learning Rate: " + learningRate);
-//
-//      System.out.println();
-//      System.out.println("Weights Preloaded? " + preloadWeights);
-//      System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
-//      System.out.println("Weights Output File: " + outputWeightsPath);
-//      System.out.println("Test Cases File: " + testCasePath);
-//
-//      /*
-//       * Print time taken to complete training.
-//       */
-//      long endingTime = System.nanoTime();                                                      // Ending time (in nanoseconds).
-//      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_MILLI;           // Time for training (in millisec).
-//      double roundedTime = ((double) Math.round(completionTime * ROUNDING_VAL)) / ROUNDING_VAL; // Rounded time for training.
-//
-//      System.out.println();
-//      System.out.println("Training Time: " + roundedTime + " milliseconds");
-//
-//      System.out.println();
-//      System.out.println("================== TRAINING REPORT ENDING ==================");
+      System.out.println();
+      System.out.println("================== TRAINING REPORT STARTING ==================");
+      System.out.println();
+
+      System.out.println(inputNodes + " by " + firstHiddenNodes + " by " +
+              secondHiddenNodes + " by " + outputNodes + " network.");
+      System.out.println();
+
+      /*
+       * Prints different messages depending on if the error threshold was reached.
+       */
+      if (numIters < maxIters)
+         System.out.println("Error threshold reached. ");
+      else
+         System.out.println("Maximum number of iterations reached. ");
+
+      System.out.println();
+      System.out.println("Error: " + finalError);
+      System.out.println("Iterations: " + numIters);
+      System.out.println();
+
+      /*
+       * Print final outputs for test cases.
+       */
+      for (int testCase = 0; testCase < numCases; testCase++)
+      {
+         loadTestCase(testCase);
+         evaluateNetworkRun();
+         System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
+               + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
+                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
+      } // for (int testCase = 0; testCase < numCases; testCase++)
+
+      System.out.println();
+
+      System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
+      System.out.println("Max Iterations: " + maxIters);
+      System.out.println("Error Threshold: " + errorThreshold);
+      System.out.println("Learning Rate: " + learningRate);
+
+      System.out.println();
+      System.out.println("Weights Preloaded? " + preloadWeights);
+      System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
+      System.out.println("Weights Output File: " + outputWeightsPath);
+      System.out.println("Test Cases File: " + testCasePath);
+
+      /*
+       * Print time taken to complete training.
+       */
+      long endingTime = System.nanoTime();                                                      // Ending time (in nanoseconds).
+      double completionTime = ((double) (endingTime - startingTime)) / NANO_TO_MILLI;           // Time for training (in millisec).
+      double roundedTime = ((double) Math.round(completionTime * ROUNDING_VAL)) / ROUNDING_VAL; // Rounded time for training.
+
+      System.out.println();
+      System.out.println("Training Time: " + roundedTime + " milliseconds");
+
+      System.out.println();
+      System.out.println("================== TRAINING REPORT ENDING ==================");
    } // public static void printReport(int numIters, double finalError)
 
    /*
@@ -757,49 +795,67 @@ public class Network
     */
    public static void evaluateNetworkTrain(int testCase)
    {
-//      /*
-//       * Calculate hidden layer activations by looping through each weight connecting the input layer the and hidden layer.
-//       */
-//      for (int j = 0; j < hiddenLayerNodes; j++)
-//      {
-//         double thetaj = 0.0;
-//
-//         for (int k = 0; k < inputNodes; k++)
-//         {
-//            double inputActivation = inputActivations[k];
-//            double weight = firstLayerWeights[k][j];
-//
-//            thetaj += inputActivation * weight;
-//         }
-//
-//         thetajValues[j] = thetaj;
-//         hiddenActivations[j] = f(thetaj);
-//      } // for (int j = 0; j < hiddenLayerNodes; j++)
-//
-//      /*
-//       * Calculate output layer activations by looping through each weight connecting the hidden layer and output layer.
-//       */
-//      for (int i = 0; i < outputNodes; i++)
-//      {
-//         double thetai = 0.0;
-//
-//         for (int j = 0; j < hiddenLayerNodes; j++)
-//         {
-//            double hiddenActivation = hiddenActivations[j];
-//            double weight = secondLayerWeights[j][i];
-//
-//            thetai += hiddenActivation * weight;
-//         } // for (int j = 0; j < hiddenLayerNodes; j++)
-//
-//         thetaiValues[i] = thetai;
-//
-//         double Fi = f(thetai);
-//         outputActivations[i] = Fi;
-//
-//         double omegai = testCaseOutputs[testCase][i] - Fi;
-//         double psii = omegai * fPrime(thetai);
-//         psiiValues[i] = psii;
-//      } // for (int i = 0; i < outputNodes; i++)
+      /*
+       * Calculate k layer activations by looping through each weight connecting the input layer the and first hidden layer.
+       */
+      for (int k = 0; k < firstHiddenNodes; k++)
+      {
+         double thetak = 0.0;
+
+         for (int m = 0; m < inputNodes; m++)
+         {
+            double inputActivation = inputActivations[m];
+            double weight = firstLayerWeights[m][k];
+
+            thetak += inputActivation * weight;
+         } // for (int m = 0; m < inputNodes; m++)
+         firstHiddenActivations[k] = f(thetak);
+         thetakValues[k] = thetak;
+      } // for (int k = 0; k < firstHiddenNodes; k++)
+
+      /*
+       * Calculate j layer activations by looping through each weight connecting the first hidden layer the and next layer.
+       */
+      for (int j = 0; j < secondHiddenNodes; j++)
+      {
+         double thetaj = 0.0;
+
+         for (int k = 0; k < firstHiddenNodes; k++)
+         {
+            double firstHiddenActivation = firstHiddenActivations[k];
+            double weight = secondLayerWeights[k][j];
+
+            thetaj += firstHiddenActivation * weight;
+         } // for (int k = 0; k < firstHiddenNodes; k++)
+
+         thetajValues[j] = thetaj;
+         secondHiddenActivations[j] = f(thetaj);
+      } // for (int j = 0; j < secondHiddenNodes; j++)
+
+      /*
+       * Calculate output layer activations by looping through each weight connecting the second hidden layer the and output layer.
+       */
+      for (int i = 0; i < outputNodes; i++)
+      {
+         double thetai = 0.0;
+
+         for (int j = 0; j < secondHiddenNodes; j++)
+         {
+            double secondHiddenActivation = secondHiddenActivations[j];
+            double weight = thirdLayerWeights[j][i];
+
+            thetai += secondHiddenActivation * weight;
+         } // for (int j = 0; j < secondHiddenNodes; j++)
+
+         thetaiValues[i] = thetai;
+
+         double ai = f(thetai);
+         outputActivations[i] = ai;
+
+         double Ti = testCaseOutputs[testCase][i];
+         double psii = (Ti - ai) * fPrime(thetai);
+         psiiValues[i] = psii;
+      } // for (int i = 0; i < outputNodes; i++)
    } // public static void evaluateNetworkTrain()
 
    /*
@@ -807,34 +863,48 @@ public class Network
     */
    public static void updateWeights()
    {
-//      /*
-//       * Updating weight connecting input node k and hidden node j.
-//       */
-//      for (int k = 0; k < inputNodes; k++)
-//      {
-//         for (int j = 0; j < hiddenLayerNodes; j++)
-//         {
-//            double omegaj = 0.0;
-//
-//            for (int i = 0; i < outputNodes; i++)
-//            {
-//               double psii = psiiValues[i];
-//               omegaj += psii * secondLayerWeights[j][i];
-//
-//               double weightChangeji = learningRate * hiddenActivations[j] * psii;
-//
-//               secondLayerWeights[j][i] += weightChangeji;    // Store changes for each weight.
-//            } // for (int i = 0; i < outputNodes; i++)
-//
-//            double thetaj = thetajValues[j];
-//            double upperPsij = omegaj * fPrime(thetaj);
-//
-//            double weightChangekj = learningRate * inputActivations[k] * upperPsij;
-//
-//            firstLayerWeights[k][j] += weightChangekj;        // Store changes for each weight.
-//         } // for (int j = 0; j < hiddenLayerNodes; j++)
-//      } // for (int k = 0; k < inputNodes; k++)
-   } // public static void updateWeights
+      for (int j = 0; j < secondHiddenNodes; j++)
+      {
+         double omegaj = 0.0;
+
+         for (int i = 0; i < outputNodes; i++)
+         {
+            double psii = psiiValues[i];
+            omegaj += psii * thirdLayerWeights[j][i];
+
+            double weightChangeji = learningRate * secondHiddenActivations[j] * psii;
+
+            thirdLayerWeights[j][i] += weightChangeji;    // Store changes for each weight.
+         } // for (int i = 0; i < outputNodes; i++)
+
+         double thetaj = thetajValues[j];
+         double psij = omegaj * fPrime(thetaj);
+         psijValues[j] = psij;
+      } // for (int j = 0; j < secondHiddenNodes; j++)
+
+      for (int k = 0; k < firstHiddenNodes; k++)
+      {
+         double omegak = 0.0;
+
+         for (int j = 0; j < secondHiddenNodes; j++)
+         {
+            double psij = psijValues[j];
+            omegak += psij * secondLayerWeights[k][j];
+
+            double weightChangekj = learningRate * firstHiddenActivations[k] * psij;
+
+            secondLayerWeights[k][j] += weightChangekj;    // Store changes for each weight.
+         } // for (int j = 0; j < secondHiddenNodes; j++)
+
+         double thetak = thetakValues[k];
+         double psik = omegak * fPrime(thetak);
+
+         for (int m = 0; m < inputNodes; m++)
+         {
+            firstLayerWeights[m][k] += learningRate * inputActivations[m] * psik;
+         }
+      } // for (int k = 0; k < firstHiddenNodes; k++)
+   } // public static void updateWeights()
 
    /*
     * Generate a random number between certain bounds: [lower, upper).
