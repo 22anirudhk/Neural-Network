@@ -194,7 +194,6 @@ public class Network
       } // for (int testcase = 0; testcase < numCases; testcase++)
 
       System.out.println("ERROR: " + error);
-      System.out.println(Arrays.toString(outputActivations));
    } // public static void runNetwork()
 
    /*
@@ -827,9 +826,8 @@ public class Network
 
             thetaj += firstHiddenActivation * weight;
          } // for (int k = 0; k < firstHiddenNodes; k++)
-
-         thetajValues[j] = thetaj;
          secondHiddenActivations[j] = f(thetaj);
+         thetajValues[j] = thetaj;
       } // for (int j = 0; j < secondHiddenNodes; j++)
 
       /*
@@ -856,7 +854,7 @@ public class Network
          double psii = (Ti - ai) * fPrime(thetai);
          psiiValues[i] = psii;
       } // for (int i = 0; i < outputNodes; i++)
-   } // public static void evaluateNetworkTrain()
+   } // public static void evaluateNetworkTrain(int testCase)
 
    /*
     * Updates the weights of the network to minimize the error of the network's output layer with backpropagation.
