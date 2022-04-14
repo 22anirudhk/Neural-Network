@@ -9,6 +9,29 @@ import java.util.Scanner;
  * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
+ * Method List:
+ *    public static void main(String[] args)
+ *    public static void config(String[] configFile)
+ *    public static void runNetwork()
+ *    public static void evaluateNetworkRun()
+ *    public static void allocateMemoryRun()
+ *    public static void allocateMemoryTrain()
+ *    public static void loadValuesRun()
+ *    public static void loadValuesTrain()
+ *    public static void loadWeights()
+ *    public static void saveWeights(String filename)
+ *    public static void randomizeWeights()
+ *    public static void loadTruthTable()
+ *    public static void loadTestCase(int testCase)
+ *    public static double calculateError(int testCase)
+ *    public static void printReport(int numIters)
+ *    public static void trainNetwork()
+ *    public static void evaluateNetworkTrain(int testCase)
+ *    public static void updateWeights()
+ *    public static double randomNumber(double low, double high)
+ *    public static double f(double num)
+ *    public static double fPrime(double num)
+ *
  * @author Anirudh Kotamraju
  * @version April 14, 2022
  */
@@ -412,7 +435,7 @@ public class Network
          if (inputNum != inputNodes || firstHiddenNum != firstHiddenNodes || secondHiddenNum != secondHiddenNodes
                  || outputNum != outputNodes)
             System.out.println("\n" + "------------USER ERROR! The file configuration for the network's dimensions" +
-                    "does not match the config.txt parameters.------------\n");
+                    " does not match the config.txt parameters.------------\n");
 
          /*
           * Skip over next four lines.
@@ -734,7 +757,7 @@ public class Network
 
       System.out.println();
       System.out.println("================== TRAINING REPORT ENDING ==================");
-   } // public static void printReport(int numIters, double finalError)
+   } // public static void printReport(int numIters)
 
    /*
     * Trains the network by minimizing the error function that defines the difference between
