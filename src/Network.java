@@ -4,13 +4,13 @@ import java.util.Scanner;
 
 /*
  * This class represents an A by B by C by D perceptron. There are A neurons in the input layer,
- * B neurons in the first hidden layer, and C neurons in the second hidden layer, and D neurons in the output layer.
+ * B neurons in the first hidden layer, C neurons in the second hidden layer, and D neurons in the output layer.
  *
  * The network takes in sets of input test cases and can train itself with backpropagation to predict the outputs of
  * those test cases. Floating point weights connect the neurons between each layer of the network.
  *
  * @author Anirudh Kotamraju
- * @version April 13, 2022
+ * @version April 14, 2022
  */
 public class Network
 {
@@ -72,6 +72,7 @@ public class Network
    public static boolean preloadWeights;        // True if preloaded weights should be used during training, else false.
    public static boolean isTraining;            // True if training should be performed, false if running should be performed.
 
+   public static String configPath;             // Filepath to read in config file from.
    public static String inputWeightsPath;       // Filepath to read in preloaded weights from.
    public static String outputWeightsPath;      // Filepath to output saved weights to.
    public static String testCasePath;           // Filepath to read in test cases from.
@@ -89,12 +90,17 @@ public class Network
    public static final int ROUNDING_VAL = 100;
 
    /*
+    * Default config file.
+    */
+   public static final String DEFAULT_CONFIG_FILE = "../files/config.txt";
+
+   /*
     * Main method where the network is either run or trained.
     * @param args Command line inputs.
     */
    public static void main(String[] args)
    {
-      config();
+      config(args);
 
       if (isTraining)
          trainNetwork();
@@ -104,14 +110,23 @@ public class Network
 
    /*
     * Set configuration values for network.
+    * @param configFileName
     */
-   public static void config()
+   public static void config(String[] configFile)
    {
       startingTime = System.nanoTime();
 
+      /*
+       * Check to see if a config filename is specified, else use the default config file.
+       */
+      if (configFile.length == 0)
+         configPath = DEFAULT_CONFIG_FILE;
+      else
+         configPath = configFile[0];
+
       try
       {
-         Scanner sc = new Scanner(new FileReader("files/config.txt"));
+         Scanner sc = new Scanner(new FileReader(configPath));
 
          sc.nextLine(); // Skip over header
 
@@ -180,6 +195,7 @@ public class Network
 
       allocateMemoryRun();
       loadValuesRun();
+      System.out.println();
 
       /*
        * Calculate error of the network.
@@ -191,9 +207,13 @@ public class Network
          loadTestCase(testcase);
          evaluateNetworkRun();
          error += calculateError(testcase);
+         System.out.println("INPUT " + Arrays.toString(testCaseInputs[testcase])
+                 + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
+                 + ", Expected (T): " + Arrays.toString(testCaseOutputs[testcase]));
       } // for (int testcase = 0; testcase < numCases; testcase++)
 
-      System.out.println("ERROR: " + error);
+      System.out.println();
+      System.out.println("Error: " + error);
    } // public static void runNetwork()
 
    /*
@@ -651,9 +671,8 @@ public class Network
    /*
     * Prints a report summarizing the training process.
     * @param numIters Number of iterations used to train the network.
-    * @param finalError The final error value the network reached.
     */
-   public static void printReport(int numIters, double finalError)
+   public static void printReport(int numIters)
    {
       System.out.println();
       System.out.println("================== TRAINING REPORT STARTING ==================");
@@ -670,15 +689,12 @@ public class Network
          System.out.println("Error threshold reached. ");
       else
          System.out.println("Maximum number of iterations reached. ");
-
-      System.out.println();
-      System.out.println("Error: " + finalError);
-      System.out.println("Iterations: " + numIters);
       System.out.println();
 
       /*
-       * Print final outputs for test cases.
+       * Calculate the final error of the network and final outputs.
        */
+      double finalError = 0.0;
       for (int testCase = 0; testCase < numCases; testCase++)
       {
          loadTestCase(testCase);
@@ -686,8 +702,12 @@ public class Network
          System.out.println("INPUT " + Arrays.toString(testCaseInputs[testCase])
                + " |  OUTPUT (F): " + Arrays.toString(outputActivations)
                  + ", Expected (T): " + Arrays.toString(testCaseOutputs[testCase]));
+         finalError += calculateError(testCase);
       } // for (int testCase = 0; testCase < numCases; testCase++)
 
+      System.out.println();
+      System.out.println("Error: " + finalError);
+      System.out.println("Iterations: " + numIters);
       System.out.println();
 
       System.out.println("Random Number Range: [" + lowerWeightBound + ", " + upperWeightBound + ")");
@@ -696,6 +716,7 @@ public class Network
       System.out.println("Learning Rate: " + learningRate);
 
       System.out.println();
+      System.out.println("Config File: " + configPath);
       System.out.println("Weights Preloaded? " + preloadWeights);
       System.out.println("Weights Input File (if applicable): " + inputWeightsPath);
       System.out.println("Weights Output File: " + outputWeightsPath);
@@ -780,7 +801,7 @@ public class Network
          }
       } // while (error > errorThreshold && iter < maxIters)
 
-      printReport(iter, error);
+      printReport(iter);
 
       if (weightStepSize == -1)
          saveWeights(outputWeightsPath);
