@@ -33,7 +33,7 @@ import java.util.Scanner;
  *    public static double fPrime(double num)
  *
  * @author Anirudh Kotamraju
- * @version April 14, 2022
+ * @version April 15, 2022
  */
 public class Network
 {
