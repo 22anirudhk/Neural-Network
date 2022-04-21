@@ -33,7 +33,7 @@ import java.util.Scanner;
  *    public static double fPrime(double num)
  *
  * @author Anirudh Kotamraju
- * @version April 15, 2022
+ * @version April 21, 2022
  */
 public class Network
 {
@@ -41,9 +41,9 @@ public class Network
     * Static variables.
     */
 
-   public static double[][] firstLayerWeights;  // Weights connecting the input and first hidden layer.
-   public static double[][] secondLayerWeights; // Weights connecting the first hidden and second hidden layer.
-   public static double[][] thirdLayerWeights;  // Weights connecting the second hidden and output layer.
+   public static double[][] firstLayerWeights;  // Weights connecting the input layer and first hidden layer.
+   public static double[][] secondLayerWeights; // Weights connecting the first hidden layer and second hidden layer.
+   public static double[][] thirdLayerWeights;  // Weights connecting the second hidden layer and output layer.
 
    /*
     * Activations for the input layer.
@@ -63,7 +63,7 @@ public class Network
    /*
     * Activations for the output layer.
     */
-   public static double[] outputActivations;    // Activations of output layer.
+   public static double[] outputActivations;
 
    public static int numCases;                  // Number of test cases.
    public static double[][] testCaseInputs;     // Inputs for each test case.
@@ -77,8 +77,8 @@ public class Network
    public static double[] thetaiValues;         // Values for each theta i calculated when evaluating the network for training.
 
    public static int inputNodes;                // Number of nodes in input layer.
-   public static int firstHiddenNodes;          // Number of nodes in hidden layer.
-   public static int secondHiddenNodes;         // Number of nodes in hidden layer.
+   public static int firstHiddenNodes;          // Number of nodes in first hidden layer.
+   public static int secondHiddenNodes;         // Number of nodes in second hidden layer.
    public static int outputNodes;               // Number of nodes in output layer.
 
    public static double lowerWeightBound;       // Lower bound for possible weight value.
@@ -133,14 +133,14 @@ public class Network
 
    /*
     * Set configuration values for network.
-    * @param configFileName
+    * @param configFile Name of the configuration file.
     */
    public static void config(String[] configFile)
    {
       startingTime = System.nanoTime();
 
       /*
-       * Check to see if a config filename is specified, else use the default config file.
+       * Check to see if a config filename is specified, else will use the default config file.
        */
       if (configFile.length == 0)
          configPath = DEFAULT_CONFIG_FILE;
@@ -250,15 +250,17 @@ public class Network
       for (int k = 0; k < firstHiddenNodes; k++)
       {
          double hiddenActivation = 0.0;
+
          for (int m = 0; m < inputNodes; m++)
          {
             double inputActivation = inputActivations[m];
             double weight = firstLayerWeights[m][k];
 
             hiddenActivation += inputActivation * weight;
-         }
+         } // for (int m = 0; m < inputNodes; m++)
+
          firstHiddenActivations[k] = f(hiddenActivation);
-      } // for (int j = 0; j < hiddenLayerNodes; j++)
+      } // for (int k = 0; k < firstHiddenNodes; k++)
 
       /*
        * Calculate j layer activations by looping through each weight connecting the first hidden layer the and next layer.
@@ -273,10 +275,10 @@ public class Network
             double weight = secondLayerWeights[k][j];
 
             secondHiddenActivation += firstHiddenActivation * weight;
-         } // for (int j = 0; j < hiddenLayerNodes; j++)
+         } // for (int k = 0; k < firstHiddenNodes; k++)
 
          secondHiddenActivations[j] = f(secondHiddenActivation);
-      } // for (int i = 0; i < outputNodes; i++)
+      } // for (int j = 0; j < secondHiddenNodes; j++)
 
       /*
        * Calculate output layer activations by looping through each weight connecting the second hidden layer the and output layer.
@@ -291,7 +293,7 @@ public class Network
             double weight = thirdLayerWeights[j][i];
 
             outputActivation += secondHiddenActivation * weight;
-         } // for (int j = 0; j < hiddenLayerNodes; j++)
+         } // for (int j = 0; j < secondHiddenNodes; j++)
 
          outputActivations[i] = f(outputActivation);
       } // for (int i = 0; i < outputNodes; i++)
@@ -566,7 +568,7 @@ public class Network
       {
          e.printStackTrace();
       }
-   } // public static void saveWeights()
+   } // public static void saveWeights(String filename)
 
    /*
     * Randomizes the weights of the network.
@@ -761,7 +763,7 @@ public class Network
 
    /*
     * Trains the network by minimizing the error function that defines the difference between
-    * the network's output for the given test cases and the expected output for those test cases.
+    * the network's output for the given test cases and the expected outputs for those test cases.
     */
    public static void trainNetwork()
    {
@@ -942,14 +944,12 @@ public class Network
          double psik = omegak * fPrime(thetak);
 
          for (int m = 0; m < inputNodes; m++)
-         {
             firstLayerWeights[m][k] += learningRate * inputActivations[m] * psik;
-         }
       } // for (int k = 0; k < firstHiddenNodes; k++)
    } // public static void updateWeights()
 
    /*
-    * Generate a random number between certain bounds: [lower, upper).
+    * Generates a random number between certain bounds: [lower, upper).
     * @param low Lower bound.
     * @param high Upper bound.
     * @return a random number between the specified bounds.
